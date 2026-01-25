@@ -1,4 +1,6 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
 
 #define NOB_IMPLEMENTATION
 #include "nob.h"
@@ -51,5 +53,12 @@ int main(void) {
         printf("hash_person(Person{name: %s, age: %zu}) => %zu\n", person.name, person.age, hash_person(person));
     }
     temp_rewind(mark);
+    srand(time(NULL));
+    size_t random_seed = rand();
+    #define hash_uint_random(x) mix_hash(hash_uint(x), random_seed)
+    printf("Testing hash_uint_random(%zu)\n", random_seed);
+    for (size_t i = 0; i < 100; i++) {
+        printf("hash_uint_random(%zu)(%zu) => %zu\n", random_seed, i, hash_uint_random(i));
+    }
     return 0;
 }
