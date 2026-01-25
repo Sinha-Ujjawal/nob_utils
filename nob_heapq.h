@@ -1,6 +1,5 @@
 #ifndef NOB_HEAPQ_H_
 #define NOB_HEAPQ_H_
-#include "nob.h"
 
 #define nob_lt(x, y) (x) <  (y)
 #define nob_le(x, y) (x) <= (y)

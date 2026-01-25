@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define NOB_IMPLEMENTATION
-#include "nob_heapq.h"
+#include "nob.h"
+#include "nob_utils.h"
 
 typedef struct {
     int *items;
@@ -33,9 +33,7 @@ static inline void reset_heap(void) {
     heapify(heap, 2, lt);
 }
 
-int main(int argc, char **argv) {
-    GO_REBUILD_URSELF(argc, argv);
-
+int main(void) {
     add_random_values();
 
     printf("Before heapify\n");

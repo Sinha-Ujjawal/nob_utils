@@ -1,6 +1,7 @@
 #include <stdio.h>
 
-#include "nob_deque.h"
+#include "nob.h"
+#include "nob_utils.h"
 
 typedef struct {
     int *items;
@@ -9,7 +10,7 @@ typedef struct {
     size_t capacity;
 } Ints;
 
-int main() {
+int main(void) {
     Ints ints_dq = {0};
 
     for (int i = 0; i < 20; i++) {

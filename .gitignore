@@ -1,5 +1,6 @@
 nob
 test_nob_heapq
 test_nob_deque
+test_nob_hash
 *.old
 *.swp
