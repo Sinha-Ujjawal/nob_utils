@@ -9,36 +9,36 @@
 #define NOB_DEQUE_INIT_CAP 256
 #endif
 
-#define nob__deque_resize(dq, new_capacity)                                                        \
-    do {                                                                                           \
-        size_t new_begin = (new_capacity) >> 1;                                                    \
-        void *new_items = malloc(sizeof(*(dq)->items) * (new_capacity));                           \
-        NOB_ASSERT(new_items != NULL && "Buy more RAM lol");                                       \
-        for (size_t i = 0; i < (dq)->count; i++) {                                                 \
-            memcpy(                                                                                \
-                (char*) new_items   + ( (new_begin  + i) % (new_capacity)) * sizeof(*(dq)->items), \
-                (char*) (dq)->items + (((dq)->begin + i) % (dq)->capacity) * sizeof(*(dq)->items), \
-                sizeof(*(dq)->items)                                                               \
-            );                                                                                     \
-        }                                                                                          \
-        free((dq)->items);                                                                         \
-        (dq)->capacity = (new_capacity);                                                           \
-        (dq)->begin    = new_begin;                                                                \
-        (dq)->items    = new_items;                                                                \
+#define nob__deque_resize(dq, new_capacity)                                                                                                             \
+    do {                                                                                                                                                \
+        size_t _nob__deque_resize_new_begin = (new_capacity) >> 1;                                                                                      \
+        void *_nob__deque_resize_new_items = malloc(sizeof(*(dq)->items) * (new_capacity));                                                             \
+        NOB_ASSERT(_nob__deque_resize_new_items != NULL && "Buy more RAM lol");                                                                         \
+        for (size_t _nob__deque_resize_i = 0; _nob__deque_resize_i < (dq)->count; _nob__deque_resize_i++) {                                             \
+            memcpy(                                                                                                                                     \
+                (char*) _nob__deque_resize_new_items + ((_nob__deque_resize_new_begin + _nob__deque_resize_i) % (new_capacity)) * sizeof(*(dq)->items), \
+                (char*) (dq)->items + (((dq)->begin + _nob__deque_resize_i) % (dq)->capacity) * sizeof(*(dq)->items),                                   \
+                sizeof(*(dq)->items)                                                                                                                    \
+            );                                                                                                                                          \
+        }                                                                                                                                               \
+        free((dq)->items);                                                                                                                              \
+        (dq)->capacity = (new_capacity);                                                                                                                \
+        (dq)->begin    = _nob__deque_resize_new_begin;                                                                                                  \
+        (dq)->items    = _nob__deque_resize_new_items;                                                                                                  \
     } while(0)
 
-#define nob_deque_reserve(dq, expected_capacity)         \
-    do {                                                 \
-        if ((expected_capacity) > (dq)->capacity) {      \
-            size_t new_capacity = (dq)->capacity;        \
-            if (new_capacity == 0) {                     \
-                new_capacity = NOB_DEQUE_INIT_CAP;       \
-            }                                            \
-            while ((expected_capacity) > new_capacity) { \
-                new_capacity *= 2;                       \
-            }                                            \
-            nob__deque_resize(dq, new_capacity);         \
-        }                                                \
+#define nob_deque_reserve(dq, expected_capacity)                            \
+    do {                                                                    \
+        if ((expected_capacity) > (dq)->capacity) {                         \
+            size_t _nob_deque_reserve_new_capacity = (dq)->capacity;        \
+            if (_nob_deque_reserve_new_capacity == 0) {                     \
+                _nob_deque_reserve_new_capacity = NOB_DEQUE_INIT_CAP;       \
+            }                                                               \
+            while ((expected_capacity) > _nob_deque_reserve_new_capacity) { \
+                _nob_deque_reserve_new_capacity *= 2;                       \
+            }                                                               \
+            nob__deque_resize((dq), _nob_deque_reserve_new_capacity);       \
+        }                                                                   \
     } while (0)
 
 // Append an item to a dynamic queue
@@ -56,7 +56,7 @@
         (dq)->count -= 1;                                                                   \
         *(result) = (dq)->items[((dq)->begin + (dq)->count) % (dq)->capacity];              \
         if (((dq)->count > NOB_DEQUE_INIT_CAP) && ((dq)->count <= (dq)->capacity * 0.25)) { \
-            nob__deque_resize(dq, (dq)->capacity / 2);                                      \
+            nob__deque_resize((dq), (dq)->capacity / 2);                                    \
         }                                                                                   \
     } while(0)
 
@@ -84,7 +84,7 @@
         *(result) = (dq)->items[(dq)->begin];                                               \
         (dq)->begin = ((dq)->begin + 1) % (dq)->capacity;                                   \
         if (((dq)->count > NOB_DEQUE_INIT_CAP) && ((dq)->count <= (dq)->capacity * 0.25)) { \
-            nob__deque_resize(dq, (dq)->capacity / 2);                                      \
+            nob__deque_resize((dq), (dq)->capacity / 2);                                    \
         }                                                                                   \
     } while(0)
 
