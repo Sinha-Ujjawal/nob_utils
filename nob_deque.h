@@ -9,6 +9,18 @@
 #define NOB_DEQUE_INIT_CAP 256
 #endif
 
+/* The deque `dq` is parameterized by T and should be of the form:
+
+struct {
+    T *items;
+    size_t begin;
+    size_t count;
+    size_t capacity;
+    ...
+} dq;
+
+*/
+
 #define nob__deque_resize(dq, new_capacity)                                                                                                             \
     do {                                                                                                                                                \
         size_t _nob__deque_resize_new_begin = (new_capacity) >> 1;                                                                                      \
