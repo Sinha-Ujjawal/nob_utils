@@ -16,7 +16,7 @@ bool build_test_binary_exec(Test_Binary_Exec_Names *test_binary_exec_names, cons
     NOB_ASSERT((count >= 1) && "We need at least one source file to build the binary");
     int rebuild_is_needed = needs_rebuild(test_binary_exec, test_source_files, count);
     if (ALWAYS_BUILD || (rebuild_is_needed > 0)) {
-        cmd_append(&cmd, "cc", "-pedantic", "-Wall", "-Wextra", "-o", test_binary_exec, test_source_files[0]);
+        cmd_append(&cmd, "cc", "-Wall", "-Wextra", "-o", test_binary_exec, test_source_files[0]);
         if (!cmd_run(&cmd, .async = &procs)) return NULL;
     }
     da_append(test_binary_exec_names, (char *) test_binary_exec);
@@ -29,9 +29,10 @@ int main(int argc, char **argv) {
 
     Test_Binary_Exec_Names test_binary_exec_names = {0};
 
-    if (!build_test_binary_exec(&test_binary_exec_names, "./test_nob_heapq", (const char **)(char* [2]){"test_nob_heapq.c", "nob_heapq.h"}, 2)) nob_return_defer(1);
-    if (!build_test_binary_exec(&test_binary_exec_names, "./test_nob_deque", (const char **)(char* [2]){"test_nob_deque.c", "nob_deque.h"}, 2)) nob_return_defer(1);
-    if (!build_test_binary_exec(&test_binary_exec_names, "./test_nob_hash", (const char **)(char* [2]){"test_nob_hash.c", "nob_hash.h"}, 2)) nob_return_defer(1);
+    if (!build_test_binary_exec(&test_binary_exec_names, "./test_nob_heapq", (const char **)(char* []){"test_nob_heapq.c", "nob_heapq.h"}, 2)) nob_return_defer(1);
+    if (!build_test_binary_exec(&test_binary_exec_names, "./test_nob_deque", (const char **)(char* []){"test_nob_deque.c", "nob_deque.h"}, 2)) nob_return_defer(1);
+    if (!build_test_binary_exec(&test_binary_exec_names, "./test_nob_hash", (const char **)(char* []){"test_nob_hash.c", "nob_hash.h"}, 2)) nob_return_defer(1);
+    if (!build_test_binary_exec(&test_binary_exec_names, "./test_nob_ht", (const char **)(char* []){"test_nob_ht.c", "nob_hash.h", "nob_ht.h"}, 3)) nob_return_defer(1);
     if (!nob_procs_wait_and_reset(&procs)) nob_return_defer(1);
 
 #if 1

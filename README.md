@@ -14,6 +14,8 @@ int main(void) {
 }
 ```
 
+See `test_` files to see few example usage of this library.
+
 ## Current Implementations
 
 | Library | Description |
@@ -21,6 +23,7 @@ int main(void) {
 | [`nob_heapq.h`](./nob_heapq.h) | It is a library that provides [`Python's heapq`](https://docs.python.org/3/library/heapq.html) |
 | [`nob_deque.h`](./nob_deque.h) | It is a library that provides Double ended queue using [Circular Buffer](https://en.wikipedia.org/wiki/Circular_buffer) |
 | [`nob_hash.h`](./nob_hash.h) | It is a library that provides many hash functions that can be used with hash tables |
+| [`nob_ht.h`](./nob_ht.h) | It is a library that provides hash table implementation using [Open Addressing](https://en.wikipedia.org/wiki/Open_addressing) |
 
 ## Copyrights
 
