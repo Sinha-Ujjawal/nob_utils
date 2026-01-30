@@ -12,6 +12,7 @@ size_t nob_hash_bytes(const void *data, size_t size);
 
 #define nob_hash_struct(x) nob_hash_bytes(&(x), sizeof(x))
 #define nob_hash_cstr(x)   nob_hash_bytes(x, strlen(x))
+#define nob_hash_sv(x)     nob_hash_bytes((x).data, ((x).count))
 
 size_t nob_mix_hash(size_t h, size_t seed);
 size_t nob_mix_hash_many(const size_t *hs, size_t hs_count, size_t seed);
@@ -104,6 +105,7 @@ size_t nob_mix_hash_many(const size_t *hs, size_t hs_count, size_t seed) {
         #define hash_bytes          nob_hash_bytes
         #define hash_struct         nob_hash_struct
         #define hash_cstr           nob_hash_cstr
+        #define hash_sv             nob_hash_sv
         #define mix_hash            nob_mix_hash
         #define mix_hash_many       nob_mix_hash_many
         #define combine_hash        nob_combine_hash
