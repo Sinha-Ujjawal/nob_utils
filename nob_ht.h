@@ -1,19 +1,19 @@
 #ifndef NOB_HT_H_
 #define NOB_HT_H_
 
+#include <assert.h>
+
 // References:
 //  - https://en.wikipedia.org/wiki/Open_addressing
 
 // Initial capacity of a dynamic hash table
 #ifndef NOB_HT_INIT_CAP
-#define NOB_HT_INIT_CAP 256
+#define NOB_HT_INIT_CAP 256 // Make sure this is power of 2
 #endif
 
 #ifndef NOB_HT_NOT_FOUND
 #define NOB_HT_NOT_FOUND ((size_t)-1)
 #endif
-
-#define nob_ht_pmod(a, b) (a % b + b) % b
 
 /* The hash table `ht` should be of the form:
 
@@ -35,12 +35,13 @@ struct {
 
 */
 
-#define nob__ht_find_slot(ht, hash_fn, is_eql_fn, key_expr, out)                                   \
-    do {                                                                                           \
-        *(out) = nob_ht_pmod(hash_fn((key_expr)), (ht).capacity);                                  \
-        while ((ht).items[*(out)].is_occupied && !is_eql_fn((ht).items[*(out)].key, (key_expr))) { \
-            *(out) = (*(out) + 1) % (ht).capacity;                                                 \
-        }                                                                                          \
+#define nob__ht_find_slot(ht, hash_fn, is_eql_fn, key_expr, out)                                                           \
+    do {                                                                                                                   \
+        NOB_ASSERT(((ht).capacity > 0) && (((ht).capacity & ((ht).capacity - 1)) == 0) && "Capacity must be power of 2!"); \
+        *(out) = hash_fn((key_expr)) & ((ht).capacity - 1);                                                                \
+        while ((ht).items[*(out)].is_occupied && !is_eql_fn((ht).items[*(out)].key, (key_expr))) {                         \
+            *(out) = (*(out) + 1) & ((ht).capacity - 1);                                                                   \
+        }                                                                                                                  \
     } while(0)
 
 #define nob_ht_get_key(ht, hash_fn, is_eql_fn, key_expr, out)                 \
@@ -60,6 +61,7 @@ struct {
         typeof((ht)->items) old_items = (ht)->items;                                                                  \
         size_t _nob__ht_resize_old_capacity = (ht)->capacity;                                                         \
         (ht)->items = malloc(sizeof(*(ht)->items) * (new_capacity));                                                  \
+        memset((ht)->items, 0, sizeof(*(ht)->items) * (new_capacity));                                                \
         NOB_ASSERT((ht)->items != NULL && "Buy more RAM lol");                                                        \
         (ht)->capacity = (new_capacity);                                                                              \
         for (size_t _nob__ht_resize_i = 0; _nob__ht_resize_i < _nob__ht_resize_old_capacity; _nob__ht_resize_i++) {   \
@@ -91,7 +93,7 @@ struct {
         if ((ht)->capacity == 0) {                                        \
             nob__ht_resize((ht), hash_fn, is_eql_fn, NOB_HT_INIT_CAP);    \
         }                                                                 \
-        if ((ht)->count == (ht)->capacity) {                              \
+        if ((ht)->count >= (ht)->capacity * 0.7) { /* resize at 70% */    \
             nob__ht_resize((ht), hash_fn, is_eql_fn, (ht)->capacity * 2); \
         }                                                                 \
         nob__ht_find_slot((*ht), hash_fn, is_eql_fn, (key_expr), (out));  \
@@ -115,9 +117,9 @@ struct {
         }                                                                                                                                                              \
         size_t _nob_ht_delete_key_j = _nob_ht_delete_key_i;                                                                                                            \
         for (;;) {                                                                                                                                                     \
-            _nob_ht_delete_key_j = (_nob_ht_delete_key_j + 1) % (ht)->capacity;                                                                                        \
+            _nob_ht_delete_key_j = (_nob_ht_delete_key_j + 1) & ((ht)->capacity - 1);                                                                                  \
             if (!(ht)->items[_nob_ht_delete_key_j].is_occupied) break;                                                                                                 \
-            size_t _nob_ht_delete_key_k = ht_pmod(hash_fn((ht)->items[_nob_ht_delete_key_i].key), (ht)->capacity);                                                     \
+            size_t _nob_ht_delete_key_k = hash_fn((ht)->items[_nob_ht_delete_key_i].key) & ((ht)->capacity - 1);                                                       \
             /* determine if k lies cyclically in (i,j] */                                                                                                              \
             /* i ≤ j: |    i..k..j    |                */                                                                                                              \
             /* i > j:    |.k..j     i....|             */                                                                                                              \
@@ -145,7 +147,6 @@ struct {
     #ifndef NOB_UNSTRIP_PREFIX
         #define HT_INIT_CAP   NOB_HT_INIT_CAP
         #define HT_NOT_FOUND  NOB_HT_NOT_FOUND
-        #define ht_pmod       nob_ht_pmod
         #define ht_reserve    nob_ht_reserve
         #define ht_get_key    nob_ht_get_key
         #define ht_insert_key nob_ht_insert_key

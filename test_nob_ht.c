@@ -59,7 +59,8 @@ int main(void) {
     size_t mark = temp_save();
     printf("Adding 16 keys to the hash table\n");
     for (size_t i = 0; i < 16; i++) {
-        ht_insert_key(&ht, hash_cstr, is_cstr_equal, temp_sprintf("Hello %zu", i), &key_idx);
+        char *key = temp_sprintf("Hello %zu", i);
+        ht_insert_key(&ht, hash_cstr, is_cstr_equal, key, &key_idx);
         ht.items[key_idx].value = i * 20;
     }
     printf("My hash table contents (%zu items):\n", ht.count);
