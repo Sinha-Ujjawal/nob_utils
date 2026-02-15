@@ -1,4 +1,5 @@
 #include "nob.h"
+#define NOB_ILIST_IMPLEMENTATION
 #include "nob_utils.h"
 
 typedef struct {
@@ -16,11 +17,14 @@ void printXs() {
         printf("  prevSibling: %zu\n", node.prevSibling);
         printf("  nextSibling: %zu\n", node.nextSibling);
         printf("  firstChild: %zu\n", node.firstChild);
-        printf("  lastChild: %zu\n", node.lastChild);
     }
 }
 
 int main(void) {
+    for (size_t i = 0; i < ARRAY_LEN(xs); i++) {
+        xs[i].x = i;
+    }
+
     ilist_prepend(xs, 1, 2);
     printf("After prepending 2 to 1\n");
     printXs();
@@ -40,6 +44,14 @@ int main(void) {
     ilist_append(xs, 1, 3);
     printf("After appending 3 to 1.\n");
     printXs();
+    printf("Foreach rooted at 1\n");
+    ilist_foreach(MyIlistNode, it, &xs, 1) {
+        printf("  x: %zu\n", it->x);
+        printf("  parent: %zu\n", it->parent);
+        printf("  prevSibling: %zu\n", it->prevSibling);
+        printf("  nextSibling: %zu\n", it->nextSibling);
+        printf("  firstChild: %zu\n", it->firstChild);
+    }
 
     ilist_append(xs, 2, 3);
     printf("After appending 3 to 2.\n");
