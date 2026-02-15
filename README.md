@@ -24,6 +24,7 @@ See `test_` files to see few example usage of this library.
 | [`nob_deque.h`](./nob_deque.h) | It is a library that provides Double ended queue using [Circular Buffer](https://en.wikipedia.org/wiki/Circular_buffer) |
 | [`nob_hash.h`](./nob_hash.h) | It is a library that provides many hash functions that can be used with hash tables |
 | [`nob_ht.h`](./nob_ht.h) | It is a library that provides hash table implementation using [Open Addressing](https://en.wikipedia.org/wiki/Open_addressing) |
+| [`nob_ilist.h`](./nob_ilist.h) | It is a library that provides an implementation of "Intrusive" list that was discussed in Wookash Podcast: Avoiding Modern C++ | Anton Mikhailov (https://youtu.be/ShSGHb65f3M?si=EBeDwAQ3FkwtzqBv) |
 
 ## Copyrights
 

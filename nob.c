@@ -33,6 +33,7 @@ int main(int argc, char **argv) {
     if (!build_test_binary_exec(&test_binary_exec_names, "./test_nob_deque", (const char **)(char* []){"test_nob_deque.c", "nob_deque.h"}, 2)) nob_return_defer(1);
     if (!build_test_binary_exec(&test_binary_exec_names, "./test_nob_hash", (const char **)(char* []){"test_nob_hash.c", "nob_hash.h"}, 2)) nob_return_defer(1);
     if (!build_test_binary_exec(&test_binary_exec_names, "./test_nob_ht", (const char **)(char* []){"test_nob_ht.c", "nob_hash.h", "nob_ht.h"}, 3)) nob_return_defer(1);
+    if (!build_test_binary_exec(&test_binary_exec_names, "./test_nob_ilist", (const char **)(char* []){"test_nob_ilist.c", "nob_ilist.h"}, 2)) nob_return_defer(1);
     if (!nob_procs_wait_and_reset(&procs)) nob_return_defer(1);
 
 #if 1
