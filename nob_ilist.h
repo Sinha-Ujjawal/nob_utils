@@ -129,6 +129,12 @@ typedef struct {
 Nob__Ilist_Iterator nob__ilist_iterator(size_t idx);
 void nob__ilist_iterator_update(Nob__Ilist_Iterator *it, size_t newIdx);
 
+#define nob_ilist_foreach(type, it, ilist, root)                                                                                                                      \
+    for (Nob__Ilist_Iterator _nob_ilist_foreach_iterator = nob__ilist_iterator((*ilist)[(root)].firstChild);                                                          \
+         (root) != 0 && _nob_ilist_foreach_iterator.i != 0 && ( _nob_ilist_foreach_iterator.isFirst || _nob_ilist_foreach_iterator.i != (*ilist)[(root)].firstChild); \
+         nob__ilist_iterator_update(&_nob_ilist_foreach_iterator, (*ilist)[_nob_ilist_foreach_iterator.i].nextSibling))                                               \
+        for (type *it = &(*ilist)[_nob_ilist_foreach_iterator.i]; it != NULL; it = NULL)
+
 #ifdef NOB_ILIST_IMPLEMENTATION
 Nob__Ilist_Iterator nob__ilist_iterator(size_t idx) {
     return (Nob__Ilist_Iterator){.i=(size_t) (idx), .isFirst=true};
@@ -138,12 +144,6 @@ void nob__ilist_iterator_update(Nob__Ilist_Iterator *it, size_t newIdx) {
     it->i = newIdx;
     it->isFirst = false;
 }
-
-#define nob_ilist_foreach(type, it, ilist, root)                                                                                                                      \
-    for (Nob__Ilist_Iterator _nob_ilist_foreach_iterator = nob__ilist_iterator((*ilist)[(root)].firstChild);                                                          \
-         (root) != 0 && _nob_ilist_foreach_iterator.i != 0 && ( _nob_ilist_foreach_iterator.isFirst || _nob_ilist_foreach_iterator.i != (*ilist)[(root)].firstChild); \
-         nob__ilist_iterator_update(&_nob_ilist_foreach_iterator, (*ilist)[_nob_ilist_foreach_iterator.i].nextSibling))                                               \
-        for (type *it = &(*ilist)[_nob_ilist_foreach_iterator.i]; it != NULL; it = NULL)
 
 #endif // NOB_ILIST_IMPLEMENTATION
 
