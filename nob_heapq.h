@@ -61,11 +61,11 @@
         *(ret) = (heap).items[0];                                       \
     } while(0);
 
-#define nob_heappush(heap, arity, cmp_fn, entry)                \
-    do {                                                        \
-        NOB_ASSERT((arity) >= 2 && "Arity must at least be 2"); \
-        nob_da_append((heap), (entry));                         \
-        nob__upheap(*(heap), (arity), cmp_fn, 0);               \
+#define nob_heappush(heap, arity, cmp_fn, entry)                  \
+    do {                                                          \
+        NOB_ASSERT((arity) >= 2 && "Arity must at least be 2");   \
+        nob_da_append((heap), (entry));                           \
+        nob__upheap(*(heap), (arity), cmp_fn, (heap)->count - 1); \
     } while(0);
 
 #define nob_heappop(heap, arity, cmp_fn, ret)                           \

@@ -54,6 +54,12 @@ int main(void) {
         printf("%d\n", *item);
     }
 
+    heappush(&heap, 2, lt, -100);
+    printf("After heappush -100\n");
+    da_foreach(int, item, &heap) {
+        printf("%d\n", *item);
+    }
+
     printf("Sorted:\n");
     while (heap.count > 0) {
         int x;
