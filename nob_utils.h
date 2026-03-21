@@ -6,5 +6,6 @@
 #include "nob_hash.h"
 #include "nob_ht.h"
 #include "nob_ilist.h"
+#include "nob_profiler.h"
 
 #endif // NOB_UTILS_H_

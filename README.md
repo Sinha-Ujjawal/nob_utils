@@ -25,6 +25,7 @@ See `test_` files to see few example usage of this library.
 | [`nob_hash.h`](./nob_hash.h) | It is a library that provides many hash functions that can be used with hash tables |
 | [`nob_ht.h`](./nob_ht.h) | It is a library that provides hash table implementation using [Open Addressing](https://en.wikipedia.org/wiki/Open_addressing) |
 | [`nob_ilist.h`](./nob_ilist.h) | It is a library that provides an implementation of "Intrusive" list that was discussed in Wookash Podcast: Avoiding Modern C++ | Anton Mikhailov (https://youtu.be/ShSGHb65f3M?si=EBeDwAQ3FkwtzqBv) |
+| [`nob_profiler.h`](./nob_profiler.h) | It is a basic profiler which was discussed by Casey Muratori on his [Computer Enhance Course](https://www.computerenhance.com/p/profiling-recursive-blocks) |
 
 ## Copyrights
 
