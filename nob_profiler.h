@@ -8,6 +8,11 @@
 
 #include <stdint.h>
 #ifndef NOB_PROFILER_NO_STDLIB
+
+#ifndef NOB_PROFILER_ENABLED
+#define NOB_PROFILER_ENABLED 0
+#endif // NOB_PROFILER_ENABLED
+
 #include <stdlib.h>
 #endif // NOB_PROFILER_NO_STDLIB
 
@@ -143,6 +148,7 @@ f64 nob_measure_time_in_millis_from_elapsed(u64 elapsed, f64 freq) {
 #ifndef NOB_PROFILER_NO_STDLIB
 
 void nob_reset_profiler(Nob_Profiler *profiler) {
+#if NOB_PROFILER_ENABLED
     profiler->anchors.count = 0;
     profiler->blocks.count = 0;
     nob_da_reserve(&profiler->anchors, NOB_ANCHORS_RESERVE_SIZE);
@@ -150,9 +156,13 @@ void nob_reset_profiler(Nob_Profiler *profiler) {
     nob_da_append(&profiler->anchors, ((Nob_Profile_Anchor) {0}));
     profiler->cpu_freq = nob_guess_cpu_timer_freq(100);
     profiler->start = nob_read_cpu_timer();
+#else
+    UNUSED(profiler);
+#endif // NOB_PROFILER_ENABLED
 }
 
 void nob_start_profile_at_anchor(Nob_Profiler *profiler, const char *label, size_t anchor_idx) {
+#if NOB_PROFILER_ENABLED
     while (anchor_idx >= profiler->anchors.count) {
         nob_da_append(&profiler->anchors, ((Nob_Profile_Anchor) {0}));
     }
@@ -170,9 +180,15 @@ void nob_start_profile_at_anchor(Nob_Profiler *profiler, const char *label, size
     }
     block.old_total_elapsed_including_children = anchor->total_elapsed_including_children;
     nob_da_append(&profiler->blocks, block);
+#else
+    UNUSED(profiler);
+    UNUSED(label);
+    UNUSED(anchor_idx);
+#endif // NOB_PROFILER_ENABLED
 }
 
 void nob_end_profile(Nob_Profiler *profiler) {
+#if NOB_PROFILER_ENABLED
     Nob_Profile_Block block = nob_da_pop(&profiler->blocks);
     u64 elapsed = nob_read_cpu_timer() - block.start;
     Nob_Profile_Anchor *anchor = &profiler->anchors.items[block.anchor_idx];
@@ -183,6 +199,9 @@ void nob_end_profile(Nob_Profiler *profiler) {
         Nob_Profile_Anchor *parent = &profiler->anchors.items[block.parent_idx];
         parent->total_elapsed_excluding_children -= elapsed;
     }
+#else
+    UNUSED(profiler);
+#endif // NOB_PROFILER_ENABLED
 }
 
 int nob__cmp_by_first_start(const void *a, const void *b) {
@@ -204,6 +223,7 @@ int nob__cmp_by_anchor_idx(const void *a, const void *b) {
 }
 
 void nob_log_profiler(Nob_Profiler profiler) {
+#if NOB_PROFILER_ENABLED
     assert(profiler.blocks.count == 0); // No open blocks should be present
     u64 total_elapsed = nob_read_cpu_timer() - profiler.start;
     printf("Total: %.2f ms\n", nob_measure_time_in_millis_from_elapsed(total_elapsed, profiler.cpu_freq));
@@ -219,7 +239,10 @@ void nob_log_profiler(Nob_Profiler profiler) {
         }
         printf(")\n");
     }
-    qsort(profiler.anchors.items + 1, profiler.anchors.count - 1, sizeof(Nob_Profile_Anchor), nob__cmp_by_first_start);
+    qsort(profiler.anchors.items + 1, profiler.anchors.count - 1, sizeof(Nob_Profile_Anchor), nob__cmp_by_anchor_idx);
+#else
+    UNUSED(profiler);
+#endif // NOB_PROFILER_ENABLED
 }
 
 #endif // NOB_PROFILER_NO_STDLIB
