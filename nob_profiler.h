@@ -49,6 +49,7 @@ typedef struct {
     u64 total_elapsed_excluding_children;
     size_t hit_count;
     u64 first_start;
+    size_t byte_count;
 } Nob_Profile_Anchor;
 
 typedef struct {
@@ -80,7 +81,7 @@ typedef struct {
 void nob_reset_profiler(Nob_Profiler *profiler);
 void nob_start_profile_at_anchor(Nob_Profiler *profiler, const char *label, size_t anchor_idx);
 #define nob_start_profile(profiler, label) nob_start_profile_at_anchor(profiler, label, __COUNTER__ + 1);
-void nob_end_profile(Nob_Profiler *profiler);
+void nob_end_profile(Nob_Profiler *profiler, size_t byte_count);
 void nob_log_profiler(Nob_Profiler profiler);
 #endif // NOB_PROFILER_NO_STDLIB
 
@@ -199,7 +200,7 @@ void nob_start_profile_at_anchor(Nob_Profiler *profiler, const char *label, size
 #endif // NOB_PROFILER_ENABLED && NOB_PROFILER_BLOCKS_ENABLED
 }
 
-void nob_end_profile(Nob_Profiler *profiler) {
+void nob_end_profile(Nob_Profiler *profiler, size_t byte_count) {
 #if NOB_PROFILER_ENABLED && NOB_PROFILER_BLOCKS_ENABLED
     Nob_Profile_Block block = nob_da_pop(&profiler->blocks);
     u64 elapsed = NOB_PROFILER_BLOCK_TIMER() - block.start;
@@ -211,8 +212,10 @@ void nob_end_profile(Nob_Profiler *profiler) {
         Nob_Profile_Anchor *parent = &profiler->anchors.items[block.parent_idx];
         parent->total_elapsed_excluding_children -= elapsed;
     }
+    anchor->byte_count += byte_count;
 #else
     UNUSED(profiler);
+    UNUSED(byte_count);
 #endif // NOB_PROFILER_ENABLED && NOB_PROFILER_BLOCKS_ENABLED
 }
 
@@ -245,12 +248,23 @@ void nob_log_profiler(Nob_Profiler profiler) {
         Nob_Profile_Anchor anchor = profiler.anchors.items[i];
         if (anchor.label == NULL) continue;
         f64 percent = 100 * (f64) anchor.total_elapsed_excluding_children / (f64) total_elapsed;
-        printf("  %s[%lu]: %.2f ms (%.2f%%", anchor.label, anchor.hit_count, nob_measure_time_in_millis_from_elapsed(anchor.total_elapsed_excluding_children, profiler.timer_freq), percent);
+        f64 millis = nob_measure_time_in_millis_from_elapsed(anchor.total_elapsed_excluding_children, profiler.timer_freq);
+        printf("  %s[%lu]: %.2f ms (%.2f%%", anchor.label, anchor.hit_count, millis, percent);
         if (anchor.total_elapsed_excluding_children != anchor.total_elapsed_including_children) {
             f64 percent_with_children = 100 * (f64) anchor.total_elapsed_including_children / (f64) total_elapsed;
             printf(", %.2f%% w/children", percent_with_children);
         }
-        printf(")\n");
+        printf(")");
+        if (anchor.byte_count > 0) {
+            const f64 MEGABYTES = 1024.0f * 1024.0f;
+            const f64 GIGABYTES = MEGABYTES * 1024.0f;
+            f64 seconds = (f64) anchor.total_elapsed_including_children / profiler.timer_freq;
+            f64 bytespersecond = (f64) anchor.byte_count / seconds;
+            f64 mbs = (f64) anchor.byte_count / MEGABYTES;
+            f64 gbps = bytespersecond / GIGABYTES;
+            printf("  %.3fmb at %.2fgb/s", mbs, gbps);
+        }
+        printf("\n");
     }
     qsort(profiler.anchors.items + 1, profiler.anchors.count - 1, sizeof(Nob_Profile_Anchor), nob__cmp_by_anchor_idx);
 #else

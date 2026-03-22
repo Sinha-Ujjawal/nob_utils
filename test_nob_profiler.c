@@ -20,7 +20,7 @@ u64 fibonacci_recursive(u64 n) {
     return_defer(fibonacci_recursive(n - 1) + fibonacci_recursive(n - 2));
 
 defer:
-    end_profile(&profiler);
+    end_profile(&profiler, 0);
     return result;
 }
 
@@ -34,7 +34,7 @@ u64 fibonacci_iterative(u64 n) {
         f1 = temp;
         n--;
     }
-    end_profile(&profiler);
+    end_profile(&profiler, 0);
     return f0;
 }
 
@@ -51,7 +51,7 @@ u64 ackermann_recursive(u64 m, u64 n) {
     }
 
 defer:
-    end_profile(&profiler);
+    end_profile(&profiler, 0);
     return result;
 }
 
@@ -62,7 +62,7 @@ u64 tak_x(u64 x, u64 y, u64 z) {
     start_profile(&profiler, "tak_branch_x");
     return_defer(tak(x - 1, y, z));
 defer:
-    end_profile(&profiler);
+    end_profile(&profiler, 0);
     return result;
 }
 
@@ -71,7 +71,7 @@ u64 tak_y(u64 x, u64 y, u64 z) {
     start_profile(&profiler, "tak_branch_y");
     return_defer(tak(y - 1, z, x));
 defer:
-    end_profile(&profiler);
+    end_profile(&profiler, 0);
     return result;
 }
 
@@ -80,7 +80,7 @@ u64 tak_z(u64 x, u64 y, u64 z) {
     start_profile(&profiler, "tak_branch_z");
     return_defer(tak(z - 1, x, y));
 defer:
-    end_profile(&profiler);
+    end_profile(&profiler, 0);
     return result;
 }
 
@@ -93,7 +93,7 @@ u64 tak(u64 x, u64 y, u64 z) {
         return_defer(z);
     }
 defer:
-    end_profile(&profiler);
+    end_profile(&profiler, 0);
     return result;
 }
 
@@ -119,13 +119,13 @@ int main(void) {
         reset_profiler(&profiler);
         start_profile(&profiler, "fibonacci_recursive_start");
         printf("fibonacci_recursive(%lu): %lu\n", n, fibonacci_recursive(n));
-        end_profile(&profiler);
+        end_profile(&profiler, 0);
         log_profiler(profiler);
 
         reset_profiler(&profiler);
         start_profile(&profiler, "fibonacci_iterative_start");
         printf("fibonacci_iterative(%lu): %lu\n", n, fibonacci_iterative(n));
-        end_profile(&profiler);
+        end_profile(&profiler, 0);
         log_profiler(profiler);
     }
 
@@ -134,7 +134,7 @@ int main(void) {
        reset_profiler(&profiler);
        start_profile(&profiler, "ackermann_recursive_start");
        printf("ackermann_recursive(%lu, %lu): %lu\n", n, k, ackermann_recursive(n, k));
-       end_profile(&profiler);
+       end_profile(&profiler, 0);
        log_profiler(profiler);
     }
 
@@ -143,7 +143,7 @@ int main(void) {
        reset_profiler(&profiler);
        start_profile(&profiler, "tak_start");
        printf("tak(%lu, %lu, %lu): %lu\n", x, y, z, tak(x, y, z));
-       end_profile(&profiler);
+       end_profile(&profiler, 0);
        log_profiler(profiler);
     }
 
