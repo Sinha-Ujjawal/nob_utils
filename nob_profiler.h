@@ -85,6 +85,44 @@ void nob_end_profile(Nob_Profiler *profiler, size_t byte_count);
 void nob_log_profiler(Nob_Profiler profiler);
 #endif // NOB_PROFILER_NO_STDLIB
 
+typedef enum {
+    NOB_REPEATITION_TEST_MODE_UNINITIALIZED,
+    NOB_REPEATITION_TEST_MODE_TESTING,
+    NOB_REPEATITION_TEST_MODE_COMPLETED,
+    NOB_REPEATITION_TEST_MODE_ERROR,
+} Nob_Repeatition_Test_Mode;
+
+typedef struct {
+    u64 test_count;
+    u64 total_time;
+    u64 max_time;
+    u64 min_time;
+} Nob_Repeatition_Test_Result;
+
+typedef struct {
+    u64 target_processed_byte_count;
+    u64 cpu_timer_freq;
+    u64 try_for_time;
+    u64 test_started_at;
+    Nob_Repeatition_Test_Mode mode;
+    u32 open_block_count;
+    u32 closed_block_count;
+    u64 time_accum_this_test;
+    u64 bytes_accum_this_test;
+    Nob_Repeatition_Test_Result result;
+} Nob_Repeatition_Tester;
+
+#define nob_repeatition_tester_error(tester, ...)       \
+    do {                                                \
+        tester->mode = NOB_REPEATITION_TEST_MODE_ERROR; \
+        nob_log(ERROR, __VA_ARGS__);                    \
+    } while(0)
+void nob_repeatition_tester_new_test_wave(Nob_Repeatition_Tester *tester, u64 target_processed_byte_count, u64 timer_freq, u32 seconds_to_try);
+void nob_repeatition_tester_begin_timer(Nob_Repeatition_Tester *tester);
+void nob_repeatition_tester_end_timer(Nob_Repeatition_Tester *tester);
+void nob_repeatition_tester_count_bytes(Nob_Repeatition_Tester *tester, size_t byte_count);
+bool nob_repeatition_tester_is_testing(Nob_Repeatition_Tester *tester);
+
 #ifdef NOB_PROFILER_IMPLEMENTATION
 
 #if _WIN32
@@ -276,6 +314,103 @@ void nob_log_profiler(Nob_Profiler profiler) {
 
 #endif // NOB_PROFILER_NO_STDLIB
 
+void nob_repeatition_tester_new_test_wave(Nob_Repeatition_Tester *tester, u64 target_processed_byte_count, u64 cpu_timer_freq, u32 seconds_to_try) {
+    if (tester->mode == NOB_REPEATITION_TEST_MODE_UNINITIALIZED) {
+        tester->mode = NOB_REPEATITION_TEST_MODE_TESTING;
+        tester->target_processed_byte_count = target_processed_byte_count;
+        tester->cpu_timer_freq = cpu_timer_freq;
+        tester->result.min_time = (u64)-1;
+    } else if (tester->mode == NOB_REPEATITION_TEST_MODE_UNINITIALIZED) {
+        tester->mode = NOB_REPEATITION_TEST_MODE_TESTING;
+        if (tester->target_processed_byte_count != target_processed_byte_count) {
+            nob_repeatition_tester_error(tester, "target_processed_byte_count changed. Previously %lu bytes, Attempted to change to %lu bytes", tester->target_processed_byte_count, target_processed_byte_count);
+        }
+        if (tester->cpu_timer_freq != cpu_timer_freq) {
+            nob_repeatition_tester_error(tester, "cpu_timer_freq changed. Previously %lu, Attempted to change to %lu", tester->cpu_timer_freq, cpu_timer_freq);
+        }
+    }
+    tester->try_for_time = seconds_to_try * cpu_timer_freq;
+    tester->test_started_at = nob_read_cpu_timer();
+}
+
+void nob_repeatition_tester_begin_timer(Nob_Repeatition_Tester *tester) {
+    tester->open_block_count++;
+    tester->time_accum_this_test -= nob_read_cpu_timer();
+}
+
+void nob_repeatition_tester_end_timer(Nob_Repeatition_Tester *tester) {
+    tester->closed_block_count++;
+    tester->time_accum_this_test += nob_read_cpu_timer();
+}
+
+void nob_repeatition_tester_count_bytes(Nob_Repeatition_Tester *tester, size_t byte_count) {
+    tester->bytes_accum_this_test += byte_count;
+}
+
+void nob__print_time(char const *label, f64 cpu_time, u64 cpu_timer_freq, u64 byte_count) {
+    printf("%s: %.0f", label, cpu_time);
+    if(cpu_timer_freq)
+    {
+        f64 seconds = cpu_time / cpu_timer_freq;
+        printf(" (%fms)", 1000.0f*seconds);
+
+        if(byte_count)
+        {
+            const f64 MEGABYTES = 1024.0f * 1024.0f;
+            const f64 GIGABYTES = MEGABYTES * 1024.0f;
+            f64 best_bw = byte_count / (GIGABYTES * seconds);
+            printf(" %fgb/s", best_bw);
+        }
+    }
+    printf("\n");
+}
+
+void nob__print_result(Nob_Repeatition_Test_Result result, u64 cpu_timer_freq, u64 byte_count) {
+    nob__print_time("Min", result.min_time, cpu_timer_freq, byte_count);
+    nob__print_time("Max", result.max_time, cpu_timer_freq, byte_count);
+    if(result.test_count) {
+        nob__print_time("Avg", (f64) result.total_time / (f64) result.test_count,  cpu_timer_freq, byte_count);
+    }
+}
+
+bool nob_repeatition_tester_is_testing(Nob_Repeatition_Tester *tester) {
+    if (tester->mode == NOB_REPEATITION_TEST_MODE_TESTING) {
+        u64 current_time = nob_read_cpu_timer();
+        if (tester->open_block_count) {
+            if (tester->open_block_count != tester->closed_block_count) {
+                nob_repeatition_tester_error(tester, "Unbalanced begin/end time, open count: %u, end count: %u", tester->open_block_count, tester->closed_block_count);
+            }
+            if (tester->bytes_accum_this_test != tester->target_processed_byte_count) {
+                nob_repeatition_tester_error(tester, "Processed byte count mismatch. Expected: %lu bytes, got %lu bytes", tester->target_processed_byte_count, tester->bytes_accum_this_test);
+            }
+            if (tester->mode == NOB_REPEATITION_TEST_MODE_TESTING) {
+                Nob_Repeatition_Test_Result *result = &tester->result;
+                u64 elapsed_time = tester->time_accum_this_test;
+                result->test_count++;
+                result->total_time += elapsed_time;
+                if (result->max_time < elapsed_time) {
+                    result->max_time = elapsed_time;
+                }
+                if (result->min_time > elapsed_time) {
+                    result->min_time = elapsed_time;
+                    tester->test_started_at = current_time;
+                    nob__print_time("Min", result->min_time, tester->cpu_timer_freq, tester->target_processed_byte_count);
+                }
+
+                tester->open_block_count = 0;
+                tester->closed_block_count = 0;
+                tester->time_accum_this_test = 0;
+                tester->bytes_accum_this_test = 0;
+            }
+        }
+        if ((current_time - tester->test_started_at) > tester->try_for_time) {
+            tester->mode = NOB_REPEATITION_TEST_MODE_COMPLETED;
+            nob__print_result(tester->result, tester->cpu_timer_freq, tester->target_processed_byte_count);
+        }
+    }
+    return tester->mode == NOB_REPEATITION_TEST_MODE_TESTING;
+}
+
 #endif // NOB_PROFILER_IMPLEMENTATION
 
 #ifndef NOB_PROFILER_STRIP_PREFIX_GUARD_
@@ -298,6 +433,19 @@ void nob_log_profiler(Nob_Profiler profiler) {
             #define end_profile              nob_end_profile
             #define log_profiler             nob_log_profiler
         #endif // NOB_PROFILER_NO_STDLIB
+        #define Repeatition_Test_Mode               Nob_Repeatition_Test_Mode
+        #define REPEATITION_TEST_MODE_UNINITIALIZED NOB_REPEATITION_TEST_MODE_UNINITIALIZED
+        #define REPEATITION_TEST_MODE_TESTING       NOB_REPEATITION_TEST_MODE_TESTING
+        #define REPEATITION_TEST_MODE_COMPLETED     NOB_REPEATITION_TEST_MODE_COMPLETED
+        #define REPEATITION_TEST_MODE_ERROR         NOB_REPEATITION_TEST_MODE_ERROR
+        #define Repeatition_Test_Result             Nob_Repeatition_Test_Result
+        #define Repeatition_Tester                  Nob_Repeatition_Tester
+        #define repeatition_tester_error            nob_repeatition_tester_error
+        #define repeatition_tester_new_test_wave    nob_repeatition_tester_new_test_wave
+        #define repeatition_tester_begin_timer      nob_repeatition_tester_begin_timer
+        #define repeatition_tester_end_timer        nob_repeatition_tester_end_timer
+        #define repeatition_tester_count_bytes      nob_repeatition_tester_count_bytes
+        #define repeatition_tester_is_testing       nob_repeatition_tester_is_testing
     #endif // NOB_UNSTRIP_PREFIX
 #endif // NOB_PROFILER_STRIP_PREFIX_GUARD_
 

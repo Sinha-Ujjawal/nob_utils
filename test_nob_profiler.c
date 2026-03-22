@@ -1,5 +1,6 @@
 #include <stdio.h>
 
+#define NOB_IMPLEMENTATION
 #include "nob.h"
 #define NOB_PROFILER_IMPLEMENTATION
 #define NOB_PROFILER_ENABLED 1
@@ -10,6 +11,30 @@
 #include "nob_profiler.h"
 
 Profiler profiler = {0};
+
+bool get_file_size(const char *file_path, size_t *out) {
+    bool result = false;
+    FILE *f = fopen(file_path, "rb");
+    long long m = 0;
+    if (f == NULL)                 return_defer(false);
+    if (fseek(f, 0, SEEK_END) < 0) return_defer(false);
+#ifndef _WIN32
+    m = ftell(f);
+#else
+    m = _telli64(_fileno(f));
+#endif
+    if (m < 0)                     return_defer(false);
+    if (fseek(f, 0, SEEK_SET) < 0) return_defer(false);
+    if (out != NULL) {
+        *out = m;
+    }
+    
+    result = true;
+defer:
+    if (!result) nob_log(NOB_ERROR, "Could not read file %s: %s", file_path, strerror(errno));
+    if (f) fclose(f);
+    return result;
+}
 
 u64 fibonacci_recursive(u64 n) {
     u64 result = 0;
@@ -145,6 +170,36 @@ int main(void) {
        printf("tak(%lu, %lu, %lu): %lu\n", x, y, z, tak(x, y, z));
        end_profile(&profiler, 0);
        log_profiler(profiler);
+    }
+
+    const char *file_path = __FILE__;
+    const *buffer = NULL;
+
+    size_t file_size;
+    if (!get_file_size(file_path, &file_size)) return 1;
+    buffer = realloc(buffer, file_size);
+    Repeatition_Tester tester = {0};
+    u64 cpu_timer_freq = (u64) guess_cpu_timer_freq(100);
+    u64 seconds_to_try = 10;
+
+    for (size_t i = 0; i < 3; i++) {
+        repeatition_tester_new_test_wave(&tester, file_size, cpu_timer_freq, seconds_to_try);
+        while (repeatition_tester_is_testing(&tester)) {
+            repeatition_tester_begin_timer(&tester);
+                FILE *f = fopen(file_path, "rb");
+                if (f == NULL) {
+                    nob_log(ERROR, "Could not open file: %s for reading: %s", file_path, strerror(errno));
+                    return 1;
+                }
+                size_t bytes_read = fread(buffer, 1, file_size, f);
+                if (ferror(f)) {
+                    nob_log(ERROR, "Could not read file %s: %s", file_path, strerror(errno));
+                    return 1;
+                }
+                fclose(f);
+            repeatition_tester_end_timer(&tester);
+            repeatition_tester_count_bytes(&tester, bytes_read);
+        }
     }
 
     return 0;
