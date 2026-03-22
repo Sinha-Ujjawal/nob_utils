@@ -3,6 +3,7 @@
 #include "nob.h"
 #define NOB_PROFILER_IMPLEMENTATION
 #define NOB_PROFILER_ENABLED 1
+#define NOB_PROFILER_BLOCKS_ENABLED 1
 // #define NOB_PROFILER_NO_STDLIB
 #include "nob_profiler.h"
 

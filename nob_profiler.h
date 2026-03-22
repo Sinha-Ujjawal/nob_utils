@@ -13,6 +13,10 @@
 #define NOB_PROFILER_ENABLED 0
 #endif // NOB_PROFILER_ENABLED
 
+#ifndef NOB_PROFILER_BLOCKS_ENABLED
+#define NOB_PROFILER_BLOOCKS_ENABLED 0
+#endif // NOB_PROFILER_BLOCKS_ENABLED
+
 #include <stdlib.h>
 #endif // NOB_PROFILER_NO_STDLIB
 
@@ -162,7 +166,7 @@ void nob_reset_profiler(Nob_Profiler *profiler) {
 }
 
 void nob_start_profile_at_anchor(Nob_Profiler *profiler, const char *label, size_t anchor_idx) {
-#if NOB_PROFILER_ENABLED
+#if NOB_PROFILER_ENABLED && NOB_PROFILER_BLOCKS_ENABLED
     while (anchor_idx >= profiler->anchors.count) {
         nob_da_append(&profiler->anchors, ((Nob_Profile_Anchor) {0}));
     }
@@ -184,11 +188,11 @@ void nob_start_profile_at_anchor(Nob_Profiler *profiler, const char *label, size
     UNUSED(profiler);
     UNUSED(label);
     UNUSED(anchor_idx);
-#endif // NOB_PROFILER_ENABLED
+#endif // NOB_PROFILER_ENABLED && NOB_PROFILER_BLOCKS_ENABLED
 }
 
 void nob_end_profile(Nob_Profiler *profiler) {
-#if NOB_PROFILER_ENABLED
+#if NOB_PROFILER_ENABLED && NOB_PROFILER_BLOCKS_ENABLED
     Nob_Profile_Block block = nob_da_pop(&profiler->blocks);
     u64 elapsed = nob_read_cpu_timer() - block.start;
     Nob_Profile_Anchor *anchor = &profiler->anchors.items[block.anchor_idx];
@@ -201,7 +205,7 @@ void nob_end_profile(Nob_Profiler *profiler) {
     }
 #else
     UNUSED(profiler);
-#endif // NOB_PROFILER_ENABLED
+#endif // NOB_PROFILER_ENABLED && NOB_PROFILER_BLOCKS_ENABLED
 }
 
 int nob__cmp_by_first_start(const void *a, const void *b) {
@@ -227,6 +231,7 @@ void nob_log_profiler(Nob_Profiler profiler) {
     assert(profiler.blocks.count == 0); // No open blocks should be present
     u64 total_elapsed = nob_read_cpu_timer() - profiler.start;
     printf("Total: %.2f ms\n", nob_measure_time_in_millis_from_elapsed(total_elapsed, profiler.cpu_freq));
+#if NOB_PROFILER_BLOCKS_ENABLED
     qsort(profiler.anchors.items + 1, profiler.anchors.count - 1, sizeof(Nob_Profile_Anchor), nob__cmp_by_first_start);
     for (size_t i = 1; i < profiler.anchors.count; i++) {
         Nob_Profile_Anchor anchor = profiler.anchors.items[i];
@@ -240,6 +245,8 @@ void nob_log_profiler(Nob_Profiler profiler) {
         printf(")\n");
     }
     qsort(profiler.anchors.items + 1, profiler.anchors.count - 1, sizeof(Nob_Profile_Anchor), nob__cmp_by_anchor_idx);
+#else
+#endif // NOB_PROFILER_BLOCKS_ENABLED
 #else
     UNUSED(profiler);
 #endif // NOB_PROFILER_ENABLED
