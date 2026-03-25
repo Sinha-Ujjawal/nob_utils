@@ -279,7 +279,7 @@ void nob_log_profiler(Nob_Profiler profiler) {
 #if NOB_PROFILER_ENABLED
     assert(profiler.blocks.count == 0); // No open blocks should be present
     u64 total_elapsed = NOB_PROFILER_BLOCK_TIMER() - profiler.start;
-    printf("Total: %.2f ms (Timer Freq: %.2f)\n", nob_measure_time_in_millis_from_elapsed(total_elapsed, profiler.timer_freq), profiler.timer_freq);
+    nob_log(INFO, "Total: %.2f ms (Timer Freq: %.2f)", nob_measure_time_in_millis_from_elapsed(total_elapsed, profiler.timer_freq), profiler.timer_freq);
 #if NOB_PROFILER_BLOCKS_ENABLED
     qsort(profiler.anchors.items + 1, profiler.anchors.count - 1, sizeof(Nob_Profile_Anchor), nob__cmp_by_first_start);
     for (size_t i = 1; i < profiler.anchors.count; i++) {
@@ -287,22 +287,36 @@ void nob_log_profiler(Nob_Profiler profiler) {
         if (anchor.label == NULL) continue;
         f64 percent = 100 * (f64) anchor.total_elapsed_excluding_children / (f64) total_elapsed;
         f64 millis = nob_measure_time_in_millis_from_elapsed(anchor.total_elapsed_excluding_children, profiler.timer_freq);
-        printf("  %s[%lu]: %.2f ms (%.2f%%", anchor.label, anchor.hit_count, millis, percent);
-        if (anchor.total_elapsed_excluding_children != anchor.total_elapsed_including_children) {
-            f64 percent_with_children = 100 * (f64) anchor.total_elapsed_including_children / (f64) total_elapsed;
-            printf(", %.2f%% w/children", percent_with_children);
+        size_t mark = nob_temp_save();
+        char *log_line = NULL;
+        size_t measured_size = 0;
+        bool is_measuring = true;
+        for (size_t i = 0; i < 2; i++) {
+            size_t log_line_ptr = 0;
+            log_line_ptr += snprintf(is_measuring ? log_line : (log_line + log_line_ptr), is_measuring ? 0 : measured_size, "  %s[%lu]: %.2f ms (%.2f%%", anchor.label, anchor.hit_count, millis, percent);
+            if (anchor.total_elapsed_excluding_children != anchor.total_elapsed_including_children) {
+                f64 percent_with_children = 100 * (f64) anchor.total_elapsed_including_children / (f64) total_elapsed;
+                log_line_ptr += snprintf(is_measuring ? log_line : (log_line + log_line_ptr), is_measuring ? 0 : measured_size, ", %.2f%% w/children", percent_with_children);
+            }
+            log_line_ptr += snprintf(is_measuring ? log_line : (log_line + log_line_ptr), is_measuring ? 0 : measured_size, ")");
+            if (anchor.byte_count > 0) {
+                const f64 MEGABYTES = 1024.0f * 1024.0f;
+                const f64 GIGABYTES = MEGABYTES * 1024.0f;
+                f64 seconds = (f64) anchor.total_elapsed_including_children / profiler.timer_freq;
+                f64 bytespersecond = (f64) anchor.byte_count / seconds;
+                f64 mbs = (f64) anchor.byte_count / MEGABYTES;
+                f64 gbps = bytespersecond / GIGABYTES;
+                log_line_ptr += snprintf(is_measuring ? log_line : (log_line + log_line_ptr), is_measuring ? 0 : measured_size, "  %.3fmb at %.2fgb/s", mbs, gbps);
+            }
+            if (log_line == NULL && is_measuring) {
+                is_measuring = false;
+                measured_size = log_line_ptr + 1;
+                log_line = (char *) nob_temp_alloc(measured_size * sizeof(char));
+            }
         }
-        printf(")");
-        if (anchor.byte_count > 0) {
-            const f64 MEGABYTES = 1024.0f * 1024.0f;
-            const f64 GIGABYTES = MEGABYTES * 1024.0f;
-            f64 seconds = (f64) anchor.total_elapsed_including_children / profiler.timer_freq;
-            f64 bytespersecond = (f64) anchor.byte_count / seconds;
-            f64 mbs = (f64) anchor.byte_count / MEGABYTES;
-            f64 gbps = bytespersecond / GIGABYTES;
-            printf("  %.3fmb at %.2fgb/s", mbs, gbps);
-        }
-        printf("\n");
+        assert(log_line != NULL);
+        nob_log(INFO, "%s", log_line);
+        nob_temp_rewind(mark);
     }
     qsort(profiler.anchors.items + 1, profiler.anchors.count - 1, sizeof(Nob_Profile_Anchor), nob__cmp_by_anchor_idx);
 #else
@@ -348,21 +362,35 @@ void nob_repeatition_tester_count_bytes(Nob_Repeatition_Tester *tester, size_t b
 }
 
 void nob__print_time(char const *label, f64 cpu_time, u64 cpu_timer_freq, u64 byte_count) {
-    printf("%s: %.0f", label, cpu_time);
-    if(cpu_timer_freq)
-    {
-        f64 seconds = cpu_time / cpu_timer_freq;
-        printf(" (%fms)", 1000.0f*seconds);
-
-        if(byte_count)
+    size_t mark = nob_temp_save();
+    char *log_line = NULL;
+    size_t measured_size = 0;
+    bool is_measuring = true;
+    for (size_t i = 0; i < 2; i++) {
+        size_t log_line_ptr = 0;
+        log_line_ptr += snprintf(is_measuring ? log_line : (log_line + log_line_ptr), is_measuring ? 0 : measured_size, "%s: %.0f", label, cpu_time);
+        if(cpu_timer_freq)
         {
-            const f64 MEGABYTES = 1024.0f * 1024.0f;
-            const f64 GIGABYTES = MEGABYTES * 1024.0f;
-            f64 best_bw = byte_count / (GIGABYTES * seconds);
-            printf(" %fgb/s", best_bw);
+            f64 seconds = cpu_time / cpu_timer_freq;
+            log_line_ptr += snprintf(is_measuring ? log_line : (log_line + log_line_ptr), is_measuring ? 0 : measured_size, " (%fms)", 1000.0f*seconds);
+
+            if(byte_count)
+            {
+                const f64 MEGABYTES = 1024.0f * 1024.0f;
+                const f64 GIGABYTES = MEGABYTES * 1024.0f;
+                f64 best_bw = byte_count / (GIGABYTES * seconds);
+                log_line_ptr += snprintf(is_measuring ? log_line : (log_line + log_line_ptr), is_measuring ? 0 : measured_size, " %fgb/s", best_bw);
+            }
+        }
+        if (log_line == NULL && is_measuring) {
+            is_measuring = false;
+            measured_size = log_line_ptr + 1;
+            log_line = (char *) nob_temp_alloc(measured_size * sizeof(char));
         }
     }
-    printf("\n");
+    assert(log_line != NULL);
+    nob_log(INFO, "%s", log_line);
+    nob_temp_rewind(mark);
 }
 
 void nob__print_result(Nob_Repeatition_Test_Result result, u64 cpu_timer_freq, u64 byte_count) {
