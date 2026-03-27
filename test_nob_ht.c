@@ -11,7 +11,7 @@
 #define is_cstr_equal(x, y) (strcmp(x, y) == 0)
 
 typedef struct {
-    const char *key;
+    char *key;
     size_t value;
     bool is_occupied;
     bool is_not_new;
@@ -72,8 +72,9 @@ int main(void) {
     }
     temp_rewind(mark);
 
-    My_KV_Slot slot;
+    My_KV_Slot slot = {0};
     ht_delete_key(&ht, hash_cstr, is_cstr_equal, "Hello", &slot);
+    assert(slot.key != NULL);
     printf("Deleted Key: %s\n", slot.key);
     printf("  Value: %zu\n", slot.value);
     printf("  Is Occupied: %s\n", slot.is_occupied ? "true" : "false");

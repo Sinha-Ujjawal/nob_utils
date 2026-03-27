@@ -1,25 +1,60 @@
 #define NOB_IMPLEMENTATION
 #include "nob.h"
 
-typedef struct {
-    char **items;
-    size_t count;
-    size_t capacity;
-} Test_Binary_Exec_Names;
-
 Cmd cmd = {0};
 Procs procs = {0};
 
-#define ALWAYS_BUILD false
+typedef struct {
+    char const* test_binary_exec;
+    char const** source_files;
+    size_t num_source_files;
+    bool check_to_build_or_run;
+} Test_Case;
 
-bool build_test_binary_exec(Test_Binary_Exec_Names *test_binary_exec_names, const char *test_binary_exec, const char **test_source_files, size_t count) {
-    NOB_ASSERT((count >= 1) && "We need at least one source file to build the binary");
-    int rebuild_is_needed = needs_rebuild(test_binary_exec, test_source_files, count);
-    if (ALWAYS_BUILD || (rebuild_is_needed > 0)) {
-        cmd_append(&cmd, "cc", "-O2", "-Wall", "-Wextra", "-o", test_binary_exec, test_source_files[0]);
-        if (!cmd_run(&cmd, .async = &procs)) return NULL;
+#define mk_test(name, ...) {                                                                \
+    .test_binary_exec = "./" #name,                                                         \
+    .source_files = (char const*[]){ #name ".c", __VA_ARGS__ },                             \
+    .num_source_files = 1 + (sizeof((char const*[]){ __VA_ARGS__ }) / sizeof(char const*)), \
+}
+
+Test_Case test_cases[] = {
+    mk_test(test_nob_heapq    , "nob_heapq.h"),
+    mk_test(test_nob_deque    , "nob_deque.h"),
+    mk_test(test_nob_hash     , "nob_hash.h"),
+    mk_test(test_nob_ht       , "nob_ht.h", "nob_hash.h"),
+    mk_test(test_nob_profiler , "nob_profiler.h"),
+};
+
+bool build(bool always_build) {
+    for (size_t i = 0; i < ARRAY_LEN(test_cases); i++) {
+        Test_Case test_case = test_cases[i];
+        if (!test_case.check_to_build_or_run) continue;
+        assert(test_case.num_source_files > 0);
+        int rebuild_is_needed = 0;
+        if (always_build) {
+            rebuild_is_needed = 1;
+        } else {
+            rebuild_is_needed = needs_rebuild(test_case.test_binary_exec, test_case.source_files, test_case.num_source_files);
+        }
+        if (rebuild_is_needed > 0) {
+            cmd_append(&cmd, "cc", "-O2", "-Wall", "-Wextra", "-Werror", "-Wno-unused-result", "-o", test_case.test_binary_exec, test_case.source_files[0]);
+            if (!cmd_run(&cmd, .async = &procs)) return NULL;
+        }
     }
-    da_append(test_binary_exec_names, (char *) test_binary_exec);
+    if (!nob_procs_wait_and_reset(&procs)) return false;
+    return true;
+}
+
+bool run() {
+    for (size_t i = 0; i < ARRAY_LEN(test_cases); i++) {
+        Test_Case test_case = test_cases[i];
+        if (!test_case.check_to_build_or_run) continue;
+        nob_cmd_append(&cmd, test_case.test_binary_exec);
+        printf("--------------------------------------------------\n");
+        nob_log(NOB_INFO, "Running test for %s", test_case.test_binary_exec);
+        if (!nob_cmd_run(&cmd)) return false;
+        printf("--------------------------------------------------\n");
+    }
     return true;
 }
 
@@ -27,30 +62,70 @@ int main(int argc, char **argv) {
     GO_REBUILD_URSELF(argc, argv);
     int result = 1;
 
-    Test_Binary_Exec_Names test_binary_exec_names = {0};
+    char const* program = shift(argv, argc);
 
-    if (!build_test_binary_exec(&test_binary_exec_names, "./test_nob_heapq", (const char **)(char* []){"test_nob_heapq.c", "nob_heapq.h"}, 2)) nob_return_defer(1);
-    if (!build_test_binary_exec(&test_binary_exec_names, "./test_nob_deque", (const char **)(char* []){"test_nob_deque.c", "nob_deque.h"}, 2)) nob_return_defer(1);
-    if (!build_test_binary_exec(&test_binary_exec_names, "./test_nob_hash", (const char **)(char* []){"test_nob_hash.c", "nob_hash.h"}, 2)) nob_return_defer(1);
-    if (!build_test_binary_exec(&test_binary_exec_names, "./test_nob_ht", (const char **)(char* []){"test_nob_ht.c", "nob_hash.h", "nob_ht.h"}, 3)) nob_return_defer(1);
-    if (!build_test_binary_exec(&test_binary_exec_names, "./test_nob_ilist", (const char **)(char* []){"test_nob_ilist.c", "nob_ilist.h"}, 2)) nob_return_defer(1);
-    if (!build_test_binary_exec(&test_binary_exec_names, "./test_nob_profiler", (const char **)(char* []){"test_nob_profiler.c", "nob_profiler.h"}, 2)) nob_return_defer(1);
-    if (!nob_procs_wait_and_reset(&procs)) nob_return_defer(1);
+    #define USAGE                                                                   \
+        do {                                                                        \
+            nob_log(INFO, "Usage: %s <sub-command> [-f] [test-cases...]", program); \
+            nob_log(INFO, "SUBCOMMANDS:");                                          \
+            nob_log(INFO, "  build: Only builds the test cases");                   \
+            nob_log(INFO, "  run:   Builds and run the test cases");                \
+            nob_log(INFO, "  help:  Prints this help message");                     \
+            nob_log(INFO, "-f: Will forcefully build the test-files");              \
+            nob_log(INFO, "test-cases: Lets you chose which test-cases to build");  \
+            nob_log(INFO, "  Available test-cases");                                \
+            for (size_t i = 0; i < ARRAY_LEN(test_cases); i++) {                    \
+                nob_log(INFO, "    %s", test_cases[i].test_binary_exec);            \
+            }                                                                       \
+        } while(0)
 
-#if 1
-    da_foreach(char *, name, &test_binary_exec_names) {
-        nob_cmd_append(&cmd, *name);
-        printf("--------------------------------------------------\n");
-        nob_log(NOB_INFO, "Running test for %s", *name);
-        if (!nob_cmd_run(&cmd)) nob_return_defer(1);
-        printf("--------------------------------------------------\n");
+    if (argc <= 0) {
+        USAGE;
+        nob_log(ERROR, "No <sub-command> provided!");
+        return_defer(1);
     }
-#endif
+
+    char const* subcommand = shift(argv, argc);
+    bool always_build = false;
+    bool any_test_cases_provided = false;
+
+    while (argc > 0) {
+        char const* opt = shift(argv, argc);
+        if (strcmp(opt, "-f") == 0) {
+            always_build = true;
+            continue;
+        }
+        any_test_cases_provided = true;
+        for (size_t i = 0; i < ARRAY_LEN(test_cases); i++) {
+            if (strcmp(test_cases[i].test_binary_exec, opt) == 0) {
+                test_cases[i].check_to_build_or_run = true;
+            }
+        }
+    }
+
+    if (!any_test_cases_provided) {
+        for (size_t i = 0; i < ARRAY_LEN(test_cases); i++) {
+            test_cases[i].check_to_build_or_run = true;
+        }
+    }
+
+    if (strcmp(subcommand, "build") == 0) {
+        if (!build(always_build)) return_defer(1);
+    } else if (strcmp(subcommand, "run") == 0) {
+        if (!build(always_build)) return_defer(1);
+        if (!run()) return_defer(1);
+    } else if (strcmp(subcommand, "help") == 0) {
+        USAGE;
+        return_defer(0);
+    } else {
+        USAGE;
+        nob_log(ERROR, "Unknown <sub-command>: `%s` provided!", subcommand);
+        return_defer(1);
+    }
 
     result = 0;
 defer:
     free(cmd.items);
     free(procs.items);
-    free(test_binary_exec_names.items);
     return result;
 }

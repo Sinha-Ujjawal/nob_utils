@@ -12,7 +12,7 @@
 
 Profiler profiler = {0};
 
-bool get_file_size(const char *file_path, size_t *out) {
+bool get_file_size(char const* file_path, size_t *out) {
     bool result = false;
     FILE *f = fopen(file_path, "rb");
     long long m = 0;
@@ -172,8 +172,8 @@ int main(void) {
        log_profiler(profiler);
     }
 
-    const char *file_path = __FILE__;
-    const *buffer = NULL;
+    char const* file_path = __FILE__;
+    char *buffer = NULL;
 
     size_t file_size;
     if (!get_file_size(file_path, &file_size)) return 1;
