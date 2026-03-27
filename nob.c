@@ -96,10 +96,18 @@ int main(int argc, char **argv) {
             continue;
         }
         any_test_cases_provided = true;
+        bool found = false;
         for (size_t i = 0; i < ARRAY_LEN(test_cases); i++) {
             if (strcmp(test_cases[i].test_binary_exec, opt) == 0) {
+                found = true;
                 test_cases[i].check_to_build_or_run = true;
+                break;
             }
+        }
+        if (!found) {
+            USAGE;
+            nob_log(ERROR, "Invalid test-case: `%s` provided!", opt);
+            return_defer(1);
         }
     }
 
