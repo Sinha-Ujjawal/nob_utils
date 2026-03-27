@@ -22,6 +22,8 @@ f64 nob_guess_timer_freq(u32 wait_time_in_millis, u64 (*timer)(void));
 #define nob_guess_cpu_timer_freq(wait_time_in_millis) nob_guess_timer_freq(wait_time_in_millis, nob_read_cpu_timer)
 f64 nob_measure_time_in_millis_from_elapsed(u64 elapsed, f64 freq);
 
+u64 nob_read_os_page_fault_count(void);
+
 #ifndef NOB_PROFILER_ENABLED
 #define NOB_PROFILER_ENABLED 0
 #endif // NOB_PROFILER_ENABLED
@@ -86,17 +88,27 @@ void nob_log_profiler(Nob_Profiler profiler);
 #endif // NOB_PROFILER_NO_STDLIB
 
 typedef enum {
-    NOB_REPEATITION_TEST_MODE_UNINITIALIZED,
-    NOB_REPEATITION_TEST_MODE_TESTING,
-    NOB_REPEATITION_TEST_MODE_COMPLETED,
-    NOB_REPEATITION_TEST_MODE_ERROR,
+    NOB_REPEATITION_MODE_UNINITIALIZED,
+    NOB_REPEATITION_MODE_TESTING,
+    NOB_REPEATITION_MODE_COMPLETED,
+    NOB_REPEATITION_MODE_ERROR,
 } Nob_Repeatition_Test_Mode;
 
+enum {
+    NOB_REPEATITION_VALUE_TEST_COUNT,
+    NOB_REPEATITION_VALUE_CPU_TIMER,
+    NOB_REPEATITION_VALUE_MEM_PAGE_FAULTS,
+    NOB_REPEATITION_VALUE_MEM_BYTE_COUNT,
+    NOB_REPEATITION_VALUE_COUNT,
+};
 typedef struct {
-    u64 test_count;
-    u64 total_time;
-    u64 max_time;
-    u64 min_time;
+    u64 E[NOB_REPEATITION_VALUE_COUNT];
+} Nob_Repeatition_Value;
+
+typedef struct {
+    Nob_Repeatition_Value total;
+    Nob_Repeatition_Value min;
+    Nob_Repeatition_Value max;
 } Nob_Repeatition_Test_Result;
 
 typedef struct {
@@ -107,14 +119,13 @@ typedef struct {
     Nob_Repeatition_Test_Mode mode;
     u32 open_block_count;
     u32 closed_block_count;
-    u64 time_accum_this_test;
-    u64 bytes_accum_this_test;
+    Nob_Repeatition_Value accum_this_test;
     Nob_Repeatition_Test_Result result;
 } Nob_Repeatition_Tester;
 
 #define nob_repeatition_tester_error(tester, ...)       \
     do {                                                \
-        tester->mode = NOB_REPEATITION_TEST_MODE_ERROR; \
+        tester->mode = NOB_REPEATITION_MODE_ERROR; \
         nob_log(ERROR, __VA_ARGS__);                    \
     } while(0)
 void nob_repeatition_tester_new_test_wave(Nob_Repeatition_Tester *tester, u64 target_processed_byte_count, u64 timer_freq, u32 seconds_to_try);
@@ -129,28 +140,48 @@ bool nob_repeatition_tester_is_testing(Nob_Repeatition_Tester *tester);
 
 #include <intrin.h>
 #include <windows.h>
+#include <psapi.h>
 
-u64 nob_read_os_timer(void)
-{
+typedef struct {
+    b32 Initialized;
+    HANDLE ProcessHandle;
+} Nob__Win_OS_Metrics;
+static Nob__Win_OS_Metrics nob__win_os_metrics;
+
+u64 nob_read_os_timer(void) {
     LARGE_INTEGER Value;
     QueryPerformanceCounter(&Value);
     return Value.QuadPart;
 }
 
-u64 nob_get_os_timer_freq(void)
-{   // Number of ticks per second of the timer
+u64 nob_get_os_timer_freq(void) {
+    // Number of ticks per second of the timer
     LARGE_INTEGER Freq;
     QueryPerformanceFrequency(&Freq);
     return Freq.QuadPart;
+}
+
+u64 nob_read_os_page_fault_count(void) {
+    if(!nob__win_os_metrics.Initialized)
+    {
+        nob__win_os_metrics.Initialized = true;
+        nob__win_os_metrics.ProcessHandle = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, GetCurrentProcessId());
+    }
+    PROCESS_MEMORY_COUNTERS_EX MemoryCounters = {};
+    MemoryCounters.cb = sizeof(MemoryCounters);
+    GetProcessMemoryInfo(nob__win_os_metrics.ProcessHandle, (PROCESS_MEMORY_COUNTERS *)&MemoryCounters, sizeof(MemoryCounters));
+
+    u64 Result = MemoryCounters.PageFaultCount;
+    return Result;
 }
 
 #else
 
 #include <x86intrin.h>
 #include <sys/time.h>
+#include <sys/resource.h>
 
-u64 nob_read_os_timer(void)
-{
+u64 nob_read_os_timer(void) {
     struct timeval Value;
     gettimeofday(&Value, 0);
 
@@ -158,11 +189,20 @@ u64 nob_read_os_timer(void)
     return Result;
 }
 
-u64 nob_get_os_timer_freq(void)
-{   // Number of ticks per second of the timer
+u64 nob_get_os_timer_freq(void) {
+    // Number of ticks per second of the timer
     // On Posix based systems like Linux and MacOS, the os timer tick is basically in micro-secs.
     // 1 sec = 1000 * 1000 micro-secs
     return 1000000;
+}
+
+u64 nob_read_os_page_fault_count(void) {
+    struct rusage Usage = {0};
+    getrusage(RUSAGE_SELF, &Usage);
+    // ru_minflt  the number of page faults serviced without any I/O activity.
+    // ru_majflt  the number of page faults serviced that required I/O activity.
+    u64 Result = Usage.ru_minflt + Usage.ru_majflt;
+    return Result;
 }
 
 #endif
@@ -329,13 +369,13 @@ void nob_log_profiler(Nob_Profiler profiler) {
 #endif // NOB_PROFILER_NO_STDLIB
 
 void nob_repeatition_tester_new_test_wave(Nob_Repeatition_Tester *tester, u64 target_processed_byte_count, u64 cpu_timer_freq, u32 seconds_to_try) {
-    if (tester->mode == NOB_REPEATITION_TEST_MODE_UNINITIALIZED) {
-        tester->mode = NOB_REPEATITION_TEST_MODE_TESTING;
+    if (tester->mode == NOB_REPEATITION_MODE_UNINITIALIZED) {
+        tester->mode = NOB_REPEATITION_MODE_TESTING;
         tester->target_processed_byte_count = target_processed_byte_count;
         tester->cpu_timer_freq = cpu_timer_freq;
-        tester->result.min_time = (u64)-1;
-    } else if (tester->mode == NOB_REPEATITION_TEST_MODE_UNINITIALIZED) {
-        tester->mode = NOB_REPEATITION_TEST_MODE_TESTING;
+        tester->result.min.E[NOB_REPEATITION_VALUE_CPU_TIMER] = (u64)-1;
+    } else if (tester->mode == NOB_REPEATITION_MODE_UNINITIALIZED) {
+        tester->mode = NOB_REPEATITION_MODE_TESTING;
         if (tester->target_processed_byte_count != target_processed_byte_count) {
             nob_repeatition_tester_error(tester, "target_processed_byte_count changed. Previously %lu bytes, Attempted to change to %lu bytes", tester->target_processed_byte_count, target_processed_byte_count);
         }
@@ -349,38 +389,54 @@ void nob_repeatition_tester_new_test_wave(Nob_Repeatition_Tester *tester, u64 ta
 
 void nob_repeatition_tester_begin_timer(Nob_Repeatition_Tester *tester) {
     tester->open_block_count++;
-    tester->time_accum_this_test -= nob_read_cpu_timer();
+    Nob_Repeatition_Value *accum = &tester->accum_this_test;
+    accum->E[NOB_REPEATITION_VALUE_CPU_TIMER] -= nob_read_cpu_timer();
+    accum->E[NOB_REPEATITION_VALUE_MEM_PAGE_FAULTS] -= nob_read_os_page_fault_count();
 }
 
 void nob_repeatition_tester_end_timer(Nob_Repeatition_Tester *tester) {
     tester->closed_block_count++;
-    tester->time_accum_this_test += nob_read_cpu_timer();
+    Nob_Repeatition_Value *accum = &tester->accum_this_test;
+    accum->E[NOB_REPEATITION_VALUE_CPU_TIMER] += nob_read_cpu_timer();
+    accum->E[NOB_REPEATITION_VALUE_MEM_PAGE_FAULTS] += nob_read_os_page_fault_count();
 }
 
 void nob_repeatition_tester_count_bytes(Nob_Repeatition_Tester *tester, size_t byte_count) {
-    tester->bytes_accum_this_test += byte_count;
+    Nob_Repeatition_Value *accum = &tester->accum_this_test;
+    accum->E[NOB_REPEATITION_VALUE_MEM_BYTE_COUNT] += byte_count;
 }
 
-void nob__print_time(char const *label, f64 cpu_time, u64 cpu_timer_freq, u64 byte_count) {
+void nob__print_value(char const *label, Nob_Repeatition_Value value, u64 cpu_timer_freq) {
     size_t mark = nob_temp_save();
     char *log_line = NULL;
     size_t measured_size = 0;
     bool is_measuring = true;
+
+    u64 test_count = value.E[NOB_REPEATITION_VALUE_TEST_COUNT];
+    f64 divisor = test_count ? (f64) test_count : 1;
+    f64 E[NOB_REPEATITION_VALUE_COUNT];
+    for (size_t i = 0; i < NOB_REPEATITION_VALUE_COUNT; i++) {
+        E[i] = (f64) value.E[i] / divisor;
+    }
+
     for (size_t i = 0; i < 2; i++) {
         size_t log_line_ptr = 0;
-        log_line_ptr += snprintf(is_measuring ? log_line : (log_line + log_line_ptr), is_measuring ? 0 : measured_size, "%s: %.0f", label, cpu_time);
+        log_line_ptr += snprintf(is_measuring ? log_line : (log_line + log_line_ptr), is_measuring ? 0 : measured_size, "%s: %.0f", label, E[NOB_REPEATITION_VALUE_CPU_TIMER]);
         if(cpu_timer_freq)
         {
-            f64 seconds = cpu_time / cpu_timer_freq;
+            f64 seconds = E[NOB_REPEATITION_VALUE_CPU_TIMER] / cpu_timer_freq;
             log_line_ptr += snprintf(is_measuring ? log_line : (log_line + log_line_ptr), is_measuring ? 0 : measured_size, " (%fms)", 1000.0f*seconds);
 
-            if(byte_count)
+            if(E[NOB_REPEATITION_VALUE_MEM_BYTE_COUNT] > 0)
             {
                 const f64 MEGABYTES = 1024.0f * 1024.0f;
                 const f64 GIGABYTES = MEGABYTES * 1024.0f;
-                f64 best_bw = byte_count / (GIGABYTES * seconds);
+                f64 best_bw = E[NOB_REPEATITION_VALUE_MEM_BYTE_COUNT] / (GIGABYTES * seconds);
                 log_line_ptr += snprintf(is_measuring ? log_line : (log_line + log_line_ptr), is_measuring ? 0 : measured_size, " %fgb/s", best_bw);
             }
+        }
+        if(E[NOB_REPEATITION_VALUE_MEM_PAGE_FAULTS] > 0) {
+            snprintf(is_measuring ? log_line : (log_line + log_line_ptr), is_measuring ? 0 : measured_size, " PF: %0.4f (%0.4fk/fault)", E[NOB_REPEATITION_VALUE_MEM_PAGE_FAULTS], E[NOB_REPEATITION_VALUE_MEM_BYTE_COUNT] / (E[NOB_REPEATITION_VALUE_MEM_PAGE_FAULTS] * 1024.0));
         }
         if (log_line == NULL && is_measuring) {
             is_measuring = false;
@@ -393,50 +449,49 @@ void nob__print_time(char const *label, f64 cpu_time, u64 cpu_timer_freq, u64 by
     nob_temp_rewind(mark);
 }
 
-void nob__print_result(Nob_Repeatition_Test_Result result, u64 cpu_timer_freq, u64 byte_count) {
-    nob__print_time("Min", result.min_time, cpu_timer_freq, byte_count);
-    nob__print_time("Max", result.max_time, cpu_timer_freq, byte_count);
-    if(result.test_count) {
-        nob__print_time("Avg", (f64) result.total_time / (f64) result.test_count,  cpu_timer_freq, byte_count);
-    }
+void nob__print_result(Nob_Repeatition_Test_Result result, u64 cpu_timer_freq) {
+    nob__print_value("Min", result.min, cpu_timer_freq);
+    nob__print_value("Max", result.max, cpu_timer_freq);
+    nob__print_value("Avg", result.total,  cpu_timer_freq);
 }
 
 bool nob_repeatition_tester_is_testing(Nob_Repeatition_Tester *tester) {
-    if (tester->mode == NOB_REPEATITION_TEST_MODE_TESTING) {
+    if (tester->mode == NOB_REPEATITION_MODE_TESTING) {
+        Nob_Repeatition_Value accum = tester->accum_this_test;
         u64 current_time = nob_read_cpu_timer();
         if (tester->open_block_count) {
             if (tester->open_block_count != tester->closed_block_count) {
                 nob_repeatition_tester_error(tester, "Unbalanced begin/end time, open count: %u, end count: %u", tester->open_block_count, tester->closed_block_count);
             }
-            if (tester->bytes_accum_this_test != tester->target_processed_byte_count) {
-                nob_repeatition_tester_error(tester, "Processed byte count mismatch. Expected: %lu bytes, got %lu bytes", tester->target_processed_byte_count, tester->bytes_accum_this_test);
+            if (accum.E[NOB_REPEATITION_VALUE_MEM_BYTE_COUNT] != tester->target_processed_byte_count) {
+                nob_repeatition_tester_error(tester, "Processed byte count mismatch. Expected: %lu bytes, got %lu bytes", tester->target_processed_byte_count, accum.E[NOB_REPEATITION_VALUE_MEM_BYTE_COUNT]);
             }
-            if (tester->mode == NOB_REPEATITION_TEST_MODE_TESTING) {
+            if (tester->mode == NOB_REPEATITION_MODE_TESTING) {
                 Nob_Repeatition_Test_Result *result = &tester->result;
-                u64 elapsed_time = tester->time_accum_this_test;
-                result->test_count++;
-                result->total_time += elapsed_time;
-                if (result->max_time < elapsed_time) {
-                    result->max_time = elapsed_time;
+                accum.E[NOB_REPEATITION_VALUE_TEST_COUNT] = 1;
+                for (size_t i = 0; i < NOB_REPEATITION_VALUE_COUNT; i++) {
+                    result->total.E[i] += accum.E[i];
                 }
-                if (result->min_time > elapsed_time) {
-                    result->min_time = elapsed_time;
+                if (result->max.E[NOB_REPEATITION_VALUE_CPU_TIMER] < accum.E[NOB_REPEATITION_VALUE_CPU_TIMER]) {
+                    result->max = accum;
+                }
+                if (result->min.E[NOB_REPEATITION_VALUE_CPU_TIMER] > accum.E[NOB_REPEATITION_VALUE_CPU_TIMER]) {
+                    result->min = accum;
                     tester->test_started_at = current_time;
-                    nob__print_time("Min", result->min_time, tester->cpu_timer_freq, tester->target_processed_byte_count);
+                    nob__print_value("Min", result->min, tester->cpu_timer_freq);
                 }
 
                 tester->open_block_count = 0;
                 tester->closed_block_count = 0;
-                tester->time_accum_this_test = 0;
-                tester->bytes_accum_this_test = 0;
+                memset(&tester->accum_this_test, 0, sizeof(tester->accum_this_test));
             }
         }
         if ((current_time - tester->test_started_at) > tester->try_for_time) {
-            tester->mode = NOB_REPEATITION_TEST_MODE_COMPLETED;
-            nob__print_result(tester->result, tester->cpu_timer_freq, tester->target_processed_byte_count);
+            tester->mode = NOB_REPEATITION_MODE_COMPLETED;
+            nob__print_result(tester->result, tester->cpu_timer_freq);
         }
     }
-    return tester->mode == NOB_REPEATITION_TEST_MODE_TESTING;
+    return tester->mode == NOB_REPEATITION_MODE_TESTING;
 }
 
 #endif // NOB_PROFILER_IMPLEMENTATION
@@ -449,6 +504,7 @@ bool nob_repeatition_tester_is_testing(Nob_Repeatition_Tester *tester) {
         #define read_cpu_timer                      nob_read_cpu_timer
         #define guess_cpu_timer_freq                nob_guess_cpu_timer_freq
         #define measure_time_in_millis_from_elapsed nob_measure_time_in_millis_from_elapsed
+        #define read_os_page_fault_count            nob_read_os_page_fault_count
         #ifndef NOB_PROFILER_NO_STDLIB
             #define Profile_Anchor           Nob_Profile_Anchor
             #define Profile_Anchors          Nob_Profile_Anchors
@@ -461,19 +517,19 @@ bool nob_repeatition_tester_is_testing(Nob_Repeatition_Tester *tester) {
             #define end_profile              nob_end_profile
             #define log_profiler             nob_log_profiler
         #endif // NOB_PROFILER_NO_STDLIB
-        #define Repeatition_Test_Mode               Nob_Repeatition_Test_Mode
-        #define REPEATITION_TEST_MODE_UNINITIALIZED NOB_REPEATITION_TEST_MODE_UNINITIALIZED
-        #define REPEATITION_TEST_MODE_TESTING       NOB_REPEATITION_TEST_MODE_TESTING
-        #define REPEATITION_TEST_MODE_COMPLETED     NOB_REPEATITION_TEST_MODE_COMPLETED
-        #define REPEATITION_TEST_MODE_ERROR         NOB_REPEATITION_TEST_MODE_ERROR
-        #define Repeatition_Test_Result             Nob_Repeatition_Test_Result
-        #define Repeatition_Tester                  Nob_Repeatition_Tester
-        #define repeatition_tester_error            nob_repeatition_tester_error
-        #define repeatition_tester_new_test_wave    nob_repeatition_tester_new_test_wave
-        #define repeatition_tester_begin_timer      nob_repeatition_tester_begin_timer
-        #define repeatition_tester_end_timer        nob_repeatition_tester_end_timer
-        #define repeatition_tester_count_bytes      nob_repeatition_tester_count_bytes
-        #define repeatition_tester_is_testing       nob_repeatition_tester_is_testing
+        #define Repeatition_Test_Mode            Nob_Repeatition_Test_Mode
+        #define REPEATITION_MODE_UNINITIALIZED   NOB_REPEATITION_MODE_UNINITIALIZED
+        #define REPEATITION_MODE_TESTING         NOB_REPEATITION_MODE_TESTING
+        #define REPEATITION_MODE_COMPLETED       NOB_REPEATITION_MODE_COMPLETED
+        #define REPEATITION_MODE_ERROR           NOB_REPEATITION_MODE_ERROR
+        #define Repeatition_Test_Result          Nob_Repeatition_Test_Result
+        #define Repeatition_Tester               Nob_Repeatition_Tester
+        #define repeatition_tester_error         nob_repeatition_tester_error
+        #define repeatition_tester_new_test_wave nob_repeatition_tester_new_test_wave
+        #define repeatition_tester_begin_timer   nob_repeatition_tester_begin_timer
+        #define repeatition_tester_end_timer     nob_repeatition_tester_end_timer
+        #define repeatition_tester_count_bytes   nob_repeatition_tester_count_bytes
+        #define repeatition_tester_is_testing    nob_repeatition_tester_is_testing
     #endif // NOB_UNSTRIP_PREFIX
 #endif // NOB_PROFILER_STRIP_PREFIX_GUARD_
 
