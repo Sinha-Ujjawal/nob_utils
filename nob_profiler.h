@@ -374,7 +374,7 @@ void nob_repeatition_tester_new_test_wave(Nob_Repeatition_Tester *tester, u64 ta
         tester->target_processed_byte_count = target_processed_byte_count;
         tester->cpu_timer_freq = cpu_timer_freq;
         tester->result.min.E[NOB_REPEATITION_VALUE_CPU_TIMER] = (u64)-1;
-    } else if (tester->mode == NOB_REPEATITION_MODE_UNINITIALIZED) {
+    } else if (tester->mode == NOB_REPEATITION_MODE_COMPLETED) {
         tester->mode = NOB_REPEATITION_MODE_TESTING;
         if (tester->target_processed_byte_count != target_processed_byte_count) {
             nob_repeatition_tester_error(tester, "target_processed_byte_count changed. Previously %lu bytes, Attempted to change to %lu bytes", tester->target_processed_byte_count, target_processed_byte_count);
