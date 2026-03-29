@@ -18,6 +18,7 @@ typedef struct {
 }
 
 Test_Case test_cases[] = {
+    mk_test(test_nob_fa       , "nob_fa.h"),
     mk_test(test_nob_heapq    , "nob_heapq.h"),
     mk_test(test_nob_deque    , "nob_deque.h"),
     mk_test(test_nob_hash     , "nob_hash.h"),

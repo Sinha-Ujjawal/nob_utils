@@ -20,6 +20,7 @@ See `test_` files to see few example usage of this library.
 
 | Library | Description |
 | ------- | ----------- |
+| [`nob_fa.h`](./nob_fa.h) | It provided nob's dynamic array ops like da_append and da_pop on a fixed length array |
 | [`nob_heapq.h`](./nob_heapq.h) | It is a library that provides [`Python's heapq`](https://docs.python.org/3/library/heapq.html) |
 | [`nob_deque.h`](./nob_deque.h) | It is a library that provides Double ended queue using [Circular Buffer](https://en.wikipedia.org/wiki/Circular_buffer) |
 | [`nob_hash.h`](./nob_hash.h) | It is a library that provides many hash functions that can be used with hash tables |
