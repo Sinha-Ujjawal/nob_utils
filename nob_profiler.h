@@ -7,13 +7,10 @@
 */
 
 #include <stdint.h>
-#ifndef NOB_PROFILER_NO_STDLIB
-#include <stdlib.h>
-#endif // NOB_PROFILER_NO_STDLIB
 
 typedef uint32_t u32;
 typedef uint64_t u64;
-typedef double f64;
+typedef double   f64;
 
 u64 nob_read_os_timer(void);
 u64 nob_get_os_timer_freq(void);
@@ -40,7 +37,6 @@ u64 nob_read_os_page_fault_count(void);
 #define NOB_PROFILER_BLOCK_TIMER_FREQ nob_guess_timer_freq(100, NOB_PROFILER_BLOCK_TIMER)
 #endif // NOB_PROFILER_BLOCK_TIMER_FREQ
 
-#ifndef NOB_PROFILER_NO_STDLIB
 #define NOB_ANCHORS_RESERVE_SIZE (1 << 12)
 #define NOB_BLOCKS_RESERVE_SIZE  (1 << 17)
 
@@ -57,9 +53,8 @@ typedef struct {
 } Nob_Profile_Anchor;
 
 typedef struct {
-    Nob_Profile_Anchor *items;
+    Nob_Profile_Anchor items[NOB_ANCHORS_RESERVE_SIZE];
     size_t count;
-    size_t capacity;
 } Nob_Profile_Anchors;
 
 typedef struct {
@@ -77,9 +72,8 @@ typedef struct {
 } Nob_Profile_Block;
 
 typedef struct {
-    Nob_Profile_Block *items;
+    Nob_Profile_Block items[NOB_BLOCKS_RESERVE_SIZE];
     size_t count;
-    size_t capacity;
 } Nob_Profile_Blocks;
 
 typedef struct {
@@ -94,7 +88,6 @@ void nob_start_profile_at_anchor(Nob_Profiler *profiler, const char *label, size
 #define nob_start_profile(profiler, label, ...) nob_start_profile_at_anchor(profiler, label, __COUNTER__ + 1, (Nob_Profiler_Start_Profile_Opt) {__VA_ARGS__});
 void nob_end_profile(Nob_Profiler *profiler, size_t byte_count);
 void nob_log_profiler(Nob_Profiler profiler);
-#endif // NOB_PROFILER_NO_STDLIB
 
 typedef enum {
     NOB_REPEATITION_MODE_UNINITIALIZED,
@@ -245,15 +238,11 @@ f64 nob_measure_time_in_millis_from_elapsed(u64 elapsed, f64 freq) {
     return ((f64) elapsed / freq) * 1000;
 }
 
-#ifndef NOB_PROFILER_NO_STDLIB
-
 void nob_reset_profiler(Nob_Profiler *profiler) {
 #if NOB_PROFILER_ENABLED
     profiler->anchors.count = 0;
     profiler->blocks.count = 0;
-    nob_da_reserve(&profiler->anchors, NOB_ANCHORS_RESERVE_SIZE);
-    nob_da_reserve(&profiler->blocks, NOB_BLOCKS_RESERVE_SIZE);
-    nob_da_append(&profiler->anchors, ((Nob_Profile_Anchor) {0}));
+    nob_fa_append(&profiler->anchors, ((Nob_Profile_Anchor) {0}));
     profiler->timer_freq = (f64) (NOB_PROFILER_BLOCK_TIMER_FREQ);
     profiler->start = NOB_PROFILER_BLOCK_TIMER();
 #else
@@ -264,7 +253,7 @@ void nob_reset_profiler(Nob_Profiler *profiler) {
 void nob_start_profile_at_anchor(Nob_Profiler *profiler, const char *label, size_t anchor_idx, Nob_Profiler_Start_Profile_Opt opt) {
 #if NOB_PROFILER_ENABLED && NOB_PROFILER_BLOCKS_ENABLED
     while (anchor_idx >= profiler->anchors.count) {
-        nob_da_append(&profiler->anchors, ((Nob_Profile_Anchor) {0}));
+        nob_fa_append(&profiler->anchors, ((Nob_Profile_Anchor) {0}));
     }
     Nob_Profile_Anchor *anchor = &profiler->anchors.items[anchor_idx];
     anchor->anchor_idx = anchor_idx;
@@ -273,7 +262,7 @@ void nob_start_profile_at_anchor(Nob_Profiler *profiler, const char *label, size
     block.opt = opt;
     block.anchor_idx = anchor_idx;
     if (profiler->blocks.count > 0) {
-        block.parent_idx = nob_da_last(&profiler->blocks).anchor_idx;
+        block.parent_idx = nob_fa_last(&profiler->blocks).anchor_idx;
     }
     block.cpu_start = NOB_PROFILER_BLOCK_TIMER();
     if (opt.measure_page_faults)
@@ -284,7 +273,7 @@ void nob_start_profile_at_anchor(Nob_Profiler *profiler, const char *label, size
     block.old_total_elapsed_including_children = anchor->total_elapsed_including_children;
     if (opt.measure_page_faults)
         block.old_total_page_faults_including_children = anchor->total_page_faults_including_children;
-    nob_da_append(&profiler->blocks, block);
+    nob_fa_append(&profiler->blocks, block);
 #else
     UNUSED(profiler);
     UNUSED(label);
@@ -295,7 +284,7 @@ void nob_start_profile_at_anchor(Nob_Profiler *profiler, const char *label, size
 
 void nob_end_profile(Nob_Profiler *profiler, size_t byte_count) {
 #if NOB_PROFILER_ENABLED && NOB_PROFILER_BLOCKS_ENABLED
-    Nob_Profile_Block block = nob_da_pop(&profiler->blocks);
+    Nob_Profile_Block block = nob_fa_pop(&profiler->blocks);
     u64 elapsed = NOB_PROFILER_BLOCK_TIMER() - block.cpu_start;
     Nob_Profile_Anchor *anchor = &profiler->anchors.items[block.anchor_idx];
     anchor->total_elapsed_excluding_children += elapsed;
@@ -341,7 +330,7 @@ int nob__cmp_by_anchor_idx(const void *a, const void *b) {
 
 void nob_log_profiler(Nob_Profiler profiler) {
 #if NOB_PROFILER_ENABLED
-    assert(profiler.blocks.count == 0); // No open blocks should be present
+    NOB_ASSERT(profiler.blocks.count == 0); // No open blocks should be present
     u64 total_elapsed = NOB_PROFILER_BLOCK_TIMER() - profiler.start;
     nob_log(INFO, "Total: %.2f ms (Timer Freq: %.2f)", nob_measure_time_in_millis_from_elapsed(total_elapsed, profiler.timer_freq), profiler.timer_freq);
 #if NOB_PROFILER_BLOCKS_ENABLED
@@ -391,7 +380,7 @@ void nob_log_profiler(Nob_Profiler profiler) {
                 log_line = (char *) nob_temp_alloc(measured_size * sizeof(char));
             }
         }
-        assert(log_line != NULL);
+        NOB_ASSERT(log_line != NULL);
         nob_log(INFO, "%s", log_line);
         nob_temp_rewind(mark);
     }
@@ -402,8 +391,6 @@ void nob_log_profiler(Nob_Profiler profiler) {
     UNUSED(profiler);
 #endif // NOB_PROFILER_ENABLED
 }
-
-#endif // NOB_PROFILER_NO_STDLIB
 
 void nob_repeatition_tester_new_test_wave(Nob_Repeatition_Tester *tester, u64 target_processed_byte_count, u64 cpu_timer_freq, u32 seconds_to_try) {
     if (tester->mode == NOB_REPEATITION_MODE_UNINITIALIZED) {
@@ -481,7 +468,7 @@ void nob__print_value(char const *label, Nob_Repeatition_Value value, u64 cpu_ti
             log_line = (char *) nob_temp_alloc(measured_size * sizeof(char));
         }
     }
-    assert(log_line != NULL);
+    NOB_ASSERT(log_line != NULL);
     nob_log(INFO, "%s", log_line);
     nob_temp_rewind(mark);
 }
@@ -536,38 +523,39 @@ bool nob_repeatition_tester_is_testing(Nob_Repeatition_Tester *tester) {
 #ifndef NOB_PROFILER_STRIP_PREFIX_GUARD_
 #define NOB_PROFILER_STRIP_PREFIX_GUARD_
     #ifndef NOB_UNSTRIP_PREFIX
-        #define read_os_timer                       nob_read_os_timer
-        #define get_os_timer_freq                   nob_get_os_timer_freq
-        #define read_cpu_timer                      nob_read_cpu_timer
-        #define guess_cpu_timer_freq                nob_guess_cpu_timer_freq
-        #define measure_time_in_millis_from_elapsed nob_measure_time_in_millis_from_elapsed
-        #define read_os_page_fault_count            nob_read_os_page_fault_count
-        #ifndef NOB_PROFILER_NO_STDLIB
-            #define Profile_Anchor             Nob_Profile_Anchor
-            #define Profile_Anchors            Nob_Profile_Anchors
-            #define Profile_Block              Nob_Profile_Block
-            #define Profile_Blocks             Nob_Profile_Blocks
-            #define Profiler_Start_Profile_Opt Nob_Profiler_Start_Profile_Opt
-            #define Profiler                   Nob_Profiler
-            #define reset_profiler             nob_reset_profiler
-            #define start_profile_at_anchor    nob_start_profile_at_anchor
-            #define start_profile              nob_start_profile
-            #define end_profile                nob_end_profile
-            #define log_profiler               nob_log_profiler
-        #endif // NOB_PROFILER_NO_STDLIB
-        #define Repeatition_Test_Mode            Nob_Repeatition_Test_Mode
-        #define REPEATITION_MODE_UNINITIALIZED   NOB_REPEATITION_MODE_UNINITIALIZED
-        #define REPEATITION_MODE_TESTING         NOB_REPEATITION_MODE_TESTING
-        #define REPEATITION_MODE_COMPLETED       NOB_REPEATITION_MODE_COMPLETED
-        #define REPEATITION_MODE_ERROR           NOB_REPEATITION_MODE_ERROR
-        #define Repeatition_Test_Result          Nob_Repeatition_Test_Result
-        #define Repeatition_Tester               Nob_Repeatition_Tester
-        #define repeatition_tester_error         nob_repeatition_tester_error
-        #define repeatition_tester_new_test_wave nob_repeatition_tester_new_test_wave
-        #define repeatition_tester_begin_timer   nob_repeatition_tester_begin_timer
-        #define repeatition_tester_end_timer     nob_repeatition_tester_end_timer
-        #define repeatition_tester_count_bytes   nob_repeatition_tester_count_bytes
-        #define repeatition_tester_is_testing    nob_repeatition_tester_is_testing
+        // Basic OS/CPU Measurements
+            #define read_os_timer                       nob_read_os_timer
+            #define get_os_timer_freq                   nob_get_os_timer_freq
+            #define read_cpu_timer                      nob_read_cpu_timer
+            #define guess_cpu_timer_freq                nob_guess_cpu_timer_freq
+            #define measure_time_in_millis_from_elapsed nob_measure_time_in_millis_from_elapsed
+            #define read_os_page_fault_count            nob_read_os_page_fault_count
+        // Block Profiler
+            #define Profile_Anchor                      Nob_Profile_Anchor
+            #define Profile_Anchors                     Nob_Profile_Anchors
+            #define Profile_Block                       Nob_Profile_Block
+            #define Profile_Blocks                      Nob_Profile_Blocks
+            #define Profiler_Start_Profile_Opt          Nob_Profiler_Start_Profile_Opt
+            #define Profiler                            Nob_Profiler
+            #define reset_profiler                      nob_reset_profiler
+            #define start_profile_at_anchor             nob_start_profile_at_anchor
+            #define start_profile                       nob_start_profile
+            #define end_profile                         nob_end_profile
+            #define log_profiler                        nob_log_profiler
+        // Repeatition Tester
+            #define Repeatition_Test_Mode               Nob_Repeatition_Test_Mode
+            #define REPEATITION_MODE_UNINITIALIZED      NOB_REPEATITION_MODE_UNINITIALIZED
+            #define REPEATITION_MODE_TESTING            NOB_REPEATITION_MODE_TESTING
+            #define REPEATITION_MODE_COMPLETED          NOB_REPEATITION_MODE_COMPLETED
+            #define REPEATITION_MODE_ERROR              NOB_REPEATITION_MODE_ERROR
+            #define Repeatition_Test_Result             Nob_Repeatition_Test_Result
+            #define Repeatition_Tester                  Nob_Repeatition_Tester
+            #define repeatition_tester_error            nob_repeatition_tester_error
+            #define repeatition_tester_new_test_wave    nob_repeatition_tester_new_test_wave
+            #define repeatition_tester_begin_timer      nob_repeatition_tester_begin_timer
+            #define repeatition_tester_end_timer        nob_repeatition_tester_end_timer
+            #define repeatition_tester_count_bytes      nob_repeatition_tester_count_bytes
+            #define repeatition_tester_is_testing       nob_repeatition_tester_is_testing
     #endif // NOB_UNSTRIP_PREFIX
 #endif // NOB_PROFILER_STRIP_PREFIX_GUARD_
 

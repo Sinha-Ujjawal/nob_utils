@@ -38,7 +38,7 @@ bool build(bool always_build) {
             rebuild_is_needed = needs_rebuild(test_case.test_binary_exec, test_case.source_files, test_case.num_source_files);
         }
         if (rebuild_is_needed > 0) {
-            cmd_append(&cmd, "cc", "-O2", "-Wall", "-Wextra", "-Werror", "-Wno-unused-result", "-o", test_case.test_binary_exec, test_case.source_files[0]);
+            cmd_append(&cmd, "cc", "-O2", "-Wall", "-Wextra", "-Werror", "-Wno-unused-result", "-Wno-unused-value", "-o", test_case.test_binary_exec, test_case.source_files[0]);
             if (!cmd_run(&cmd, .async = &procs)) return NULL;
         }
     }

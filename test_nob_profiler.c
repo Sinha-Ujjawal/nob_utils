@@ -1,7 +1,9 @@
 #include <stdio.h>
 
+#define NOB_ASSERT(x) NULL
 #define NOB_IMPLEMENTATION
 #include "nob.h"
+#include "nob_fa.h"
 #define NOB_PROFILER_IMPLEMENTATION
 #define NOB_PROFILER_ENABLED 1
 #define NOB_PROFILER_BLOCKS_ENABLED 1
@@ -28,7 +30,7 @@ bool get_file_size(char const* file_path, size_t *out) {
     if (out != NULL) {
         *out = m;
     }
-    
+
     result = true;
 defer:
     if (!result) nob_log(NOB_ERROR, "Could not read file %s: %s", file_path, strerror(errno));
@@ -61,6 +63,23 @@ u64 fibonacci_iterative(u64 n) {
     }
     end_profile(&profiler, 0);
     return f0;
+}
+
+u64 ackermann_recursive(u64 m, u64 n) {
+    u64 result = 0;
+    // start_profile(&profiler, "ackermann_recursive");
+
+    if (m == 0) {
+        return_defer(n + 1);
+    } else if (m > 0 && n == 0) {
+        return_defer(ackermann_recursive(m - 1, 1));
+    } else {
+        return_defer(ackermann_recursive(m - 1, ackermann_recursive(m, n - 1)));
+    }
+
+defer:
+    // end_profile(&profiler, 0);
+    return result;
 }
 
 u64 tak(u64 x, u64 y, u64 z);
@@ -135,6 +154,16 @@ int main(void) {
         printf("fibonacci_iterative(%lu): %lu\n", n, fibonacci_iterative(n));
         end_profile(&profiler, 0);
         log_profiler(profiler);
+    }
+
+
+    {
+       u64 n = 4, k = 1;
+       reset_profiler(&profiler);
+       start_profile(&profiler, "ackermann_recursive_start");
+       printf("ackermann_recursive(%lu, %lu): %lu\n", n, k, ackermann_recursive(n, k));
+       end_profile(&profiler, 0);
+       log_profiler(profiler);
     }
 
     {
