@@ -63,23 +63,6 @@ u64 fibonacci_iterative(u64 n) {
     return f0;
 }
 
-u64 ackermann_recursive(u64 m, u64 n) {
-    u64 result = 0;
-    start_profile(&profiler, "ackermann_recursive");
-
-    if (m == 0) {
-        return_defer(n + 1);
-    } else if (m > 0 && n == 0) {
-        return_defer(ackermann_recursive(m - 1, 1));
-    } else {
-        return_defer(ackermann_recursive(m - 1, ackermann_recursive(m, n - 1)));
-    }
-
-defer:
-    end_profile(&profiler, 0);
-    return result;
-}
-
 u64 tak(u64 x, u64 y, u64 z);
 
 u64 tak_x(u64 x, u64 y, u64 z) {
@@ -155,15 +138,6 @@ int main(void) {
     }
 
     {
-       u64 n = 4, k = 1;
-       reset_profiler(&profiler);
-       start_profile(&profiler, "ackermann_recursive_start");
-       printf("ackermann_recursive(%lu, %lu): %lu\n", n, k, ackermann_recursive(n, k));
-       end_profile(&profiler, 0);
-       log_profiler(profiler);
-    }
-
-    {
        u64 x = 24, y = 16, z = 8;
        reset_profiler(&profiler);
        start_profile(&profiler, "tak_start");
@@ -172,34 +146,51 @@ int main(void) {
        log_profiler(profiler);
     }
 
-    char const* file_path = __FILE__;
-    char *buffer = NULL;
-
-    size_t file_size;
-    if (!get_file_size(file_path, &file_size)) return 1;
-    buffer = realloc(buffer, file_size);
-    Repeatition_Tester tester = {0};
-    u64 cpu_timer_freq = (u64) guess_cpu_timer_freq(100);
-    u64 seconds_to_try = 10;
-
-    for (size_t i = 0; i < 3; i++) {
-        repeatition_tester_new_test_wave(&tester, file_size, cpu_timer_freq, seconds_to_try);
-        while (repeatition_tester_is_testing(&tester)) {
-            repeatition_tester_begin_timer(&tester);
-                FILE *f = fopen(file_path, "rb");
-                if (f == NULL) {
-                    nob_log(ERROR, "Could not open file: %s for reading: %s", file_path, strerror(errno));
-                    return 1;
-                }
-                size_t bytes_read = fread(buffer, 1, file_size, f);
-                if (ferror(f)) {
-                    nob_log(ERROR, "Could not read file %s: %s", file_path, strerror(errno));
-                    return 1;
-                }
-                fclose(f);
-            repeatition_tester_end_timer(&tester);
-            repeatition_tester_count_bytes(&tester, bytes_read);
+    {
+        reset_profiler(&profiler);
+        start_profile(&profiler, "malloc_1mb_test", .measure_page_faults=true);
+        size_t size = 1024 * 1024; // 1mb;
+        char *ptr = (char *) malloc(size);
+        for (size_t i = 0; i < size; i++) {
+            ptr[i] = ('a' + i) % 256;
         }
+        end_profile(&profiler, size);
+        log_profiler(profiler);
+        nob_log(INFO, "ptr[0]: %c", ptr[0]);
+        free(ptr);
+    }
+
+    {
+        char const* file_path = __FILE__;
+        char *buffer = NULL;
+
+        size_t file_size;
+        if (!get_file_size(file_path, &file_size)) return 1;
+        buffer = realloc(buffer, file_size);
+        Repeatition_Tester tester = {0};
+        u64 cpu_timer_freq = (u64) guess_cpu_timer_freq(100);
+        u64 seconds_to_try = 10;
+
+        for (size_t i = 0; i < 3; i++) {
+            repeatition_tester_new_test_wave(&tester, file_size, cpu_timer_freq, seconds_to_try);
+            while (repeatition_tester_is_testing(&tester)) {
+                repeatition_tester_begin_timer(&tester);
+                    FILE *f = fopen(file_path, "rb");
+                    if (f == NULL) {
+                        nob_log(ERROR, "Could not open file: %s for reading: %s", file_path, strerror(errno));
+                        return 1;
+                    }
+                    size_t bytes_read = fread(buffer, 1, file_size, f);
+                    if (ferror(f)) {
+                        nob_log(ERROR, "Could not read file %s: %s", file_path, strerror(errno));
+                        return 1;
+                    }
+                    fclose(f);
+                repeatition_tester_end_timer(&tester);
+                repeatition_tester_count_bytes(&tester, bytes_read);
+            }
+        }
+        free(buffer);
     }
 
     return 0;

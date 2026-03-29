@@ -42,7 +42,7 @@ u64 nob_read_os_page_fault_count(void);
 
 #ifndef NOB_PROFILER_NO_STDLIB
 #define NOB_ANCHORS_RESERVE_SIZE (1 << 12)
-#define NOB_BLOCKS_RESERVE_SIZE  (1 << 16)
+#define NOB_BLOCKS_RESERVE_SIZE  (1 << 17)
 
 typedef struct {
     size_t anchor_idx;
@@ -52,6 +52,8 @@ typedef struct {
     size_t hit_count;
     u64 first_start;
     size_t byte_count;
+    u64 total_page_faults_including_children;
+    u64 total_page_faults_excluding_children;
 } Nob_Profile_Anchor;
 
 typedef struct {
@@ -61,10 +63,17 @@ typedef struct {
 } Nob_Profile_Anchors;
 
 typedef struct {
+    bool measure_page_faults;
+}   Nob_Profiler_Start_Profile_Opt;
+
+typedef struct {
     size_t anchor_idx;
     size_t parent_idx;
-    u64 start;
+    u64 cpu_start;
+    u64 page_fault_start;
     u64 old_total_elapsed_including_children;
+    u64 old_total_page_faults_including_children;
+    Nob_Profiler_Start_Profile_Opt opt;
 } Nob_Profile_Block;
 
 typedef struct {
@@ -81,8 +90,8 @@ typedef struct {
 } Nob_Profiler;
 
 void nob_reset_profiler(Nob_Profiler *profiler);
-void nob_start_profile_at_anchor(Nob_Profiler *profiler, const char *label, size_t anchor_idx);
-#define nob_start_profile(profiler, label) nob_start_profile_at_anchor(profiler, label, __COUNTER__ + 1);
+void nob_start_profile_at_anchor(Nob_Profiler *profiler, const char *label, size_t anchor_idx, Nob_Profiler_Start_Profile_Opt opt);
+#define nob_start_profile(profiler, label, ...) nob_start_profile_at_anchor(profiler, label, __COUNTER__ + 1, (Nob_Profiler_Start_Profile_Opt) {__VA_ARGS__});
 void nob_end_profile(Nob_Profiler *profiler, size_t byte_count);
 void nob_log_profiler(Nob_Profiler profiler);
 #endif // NOB_PROFILER_NO_STDLIB
@@ -123,10 +132,10 @@ typedef struct {
     Nob_Repeatition_Test_Result result;
 } Nob_Repeatition_Tester;
 
-#define nob_repeatition_tester_error(tester, ...)       \
-    do {                                                \
+#define nob_repeatition_tester_error(tester, ...)  \
+    do {                                           \
         tester->mode = NOB_REPEATITION_MODE_ERROR; \
-        nob_log(ERROR, __VA_ARGS__);                    \
+        nob_log(ERROR, __VA_ARGS__);               \
     } while(0)
 void nob_repeatition_tester_new_test_wave(Nob_Repeatition_Tester *tester, u64 target_processed_byte_count, u64 timer_freq, u32 seconds_to_try);
 void nob_repeatition_tester_begin_timer(Nob_Repeatition_Tester *tester);
@@ -252,7 +261,7 @@ void nob_reset_profiler(Nob_Profiler *profiler) {
 #endif // NOB_PROFILER_ENABLED
 }
 
-void nob_start_profile_at_anchor(Nob_Profiler *profiler, const char *label, size_t anchor_idx) {
+void nob_start_profile_at_anchor(Nob_Profiler *profiler, const char *label, size_t anchor_idx, Nob_Profiler_Start_Profile_Opt opt) {
 #if NOB_PROFILER_ENABLED && NOB_PROFILER_BLOCKS_ENABLED
     while (anchor_idx >= profiler->anchors.count) {
         nob_da_append(&profiler->anchors, ((Nob_Profile_Anchor) {0}));
@@ -261,36 +270,51 @@ void nob_start_profile_at_anchor(Nob_Profiler *profiler, const char *label, size
     anchor->anchor_idx = anchor_idx;
     anchor->label = label;
     Nob_Profile_Block block = {0};
+    block.opt = opt;
     block.anchor_idx = anchor_idx;
     if (profiler->blocks.count > 0) {
         block.parent_idx = nob_da_last(&profiler->blocks).anchor_idx;
     }
-    block.start = NOB_PROFILER_BLOCK_TIMER();
+    block.cpu_start = NOB_PROFILER_BLOCK_TIMER();
+    if (opt.measure_page_faults)
+        block.page_fault_start = nob_read_os_page_fault_count();
     if (anchor->first_start == 0) {
-        anchor->first_start = block.start;
+        anchor->first_start = block.cpu_start;
     }
     block.old_total_elapsed_including_children = anchor->total_elapsed_including_children;
+    if (opt.measure_page_faults)
+        block.old_total_page_faults_including_children = anchor->total_page_faults_including_children;
     nob_da_append(&profiler->blocks, block);
 #else
     UNUSED(profiler);
     UNUSED(label);
     UNUSED(anchor_idx);
+    UNUSED(opt);
 #endif // NOB_PROFILER_ENABLED && NOB_PROFILER_BLOCKS_ENABLED
 }
 
 void nob_end_profile(Nob_Profiler *profiler, size_t byte_count) {
 #if NOB_PROFILER_ENABLED && NOB_PROFILER_BLOCKS_ENABLED
     Nob_Profile_Block block = nob_da_pop(&profiler->blocks);
-    u64 elapsed = NOB_PROFILER_BLOCK_TIMER() - block.start;
+    u64 elapsed = NOB_PROFILER_BLOCK_TIMER() - block.cpu_start;
     Nob_Profile_Anchor *anchor = &profiler->anchors.items[block.anchor_idx];
     anchor->total_elapsed_excluding_children += elapsed;
     anchor->total_elapsed_including_children = block.old_total_elapsed_including_children + elapsed;
-    anchor->hit_count++;
     if (profiler->blocks.count > 0) {
         Nob_Profile_Anchor *parent = &profiler->anchors.items[block.parent_idx];
         parent->total_elapsed_excluding_children -= elapsed;
     }
+    anchor->hit_count++;
     anchor->byte_count += byte_count;
+    if (block.opt.measure_page_faults) {
+        u64 page_faults = nob_read_os_page_fault_count() - block.page_fault_start;
+        anchor->total_page_faults_excluding_children += page_faults;
+        anchor->total_page_faults_including_children = block.old_total_page_faults_including_children + page_faults;
+        if (profiler->blocks.count > 0) {
+            Nob_Profile_Anchor *parent = &profiler->anchors.items[block.parent_idx];
+            parent->total_page_faults_excluding_children -= page_faults;
+        }
+    }
 #else
     UNUSED(profiler);
     UNUSED(byte_count);
@@ -333,7 +357,7 @@ void nob_log_profiler(Nob_Profiler profiler) {
         bool is_measuring = true;
         for (size_t i = 0; i < 2; i++) {
             size_t log_line_ptr = 0;
-            log_line_ptr += snprintf(is_measuring ? log_line : (log_line + log_line_ptr), is_measuring ? 0 : measured_size, "  %s[%lu]: %.2f ms (%.2f%%", anchor.label, anchor.hit_count, millis, percent);
+            log_line_ptr += snprintf(is_measuring ? log_line : (log_line + log_line_ptr), is_measuring ? 0 : measured_size, " %s[%lu]: %.2f ms (%.2f%%", anchor.label, anchor.hit_count, millis, percent);
             if (anchor.total_elapsed_excluding_children != anchor.total_elapsed_including_children) {
                 f64 percent_with_children = 100 * (f64) anchor.total_elapsed_including_children / (f64) total_elapsed;
                 log_line_ptr += snprintf(is_measuring ? log_line : (log_line + log_line_ptr), is_measuring ? 0 : measured_size, ", %.2f%% w/children", percent_with_children);
@@ -346,7 +370,20 @@ void nob_log_profiler(Nob_Profiler profiler) {
                 f64 bytespersecond = (f64) anchor.byte_count / seconds;
                 f64 mbs = (f64) anchor.byte_count / MEGABYTES;
                 f64 gbps = bytespersecond / GIGABYTES;
-                log_line_ptr += snprintf(is_measuring ? log_line : (log_line + log_line_ptr), is_measuring ? 0 : measured_size, "  %.3fmb at %.2fgb/s", mbs, gbps);
+                log_line_ptr += snprintf(is_measuring ? log_line : (log_line + log_line_ptr), is_measuring ? 0 : measured_size, " %.3fmb at %.2fgb/s", mbs, gbps);
+            }
+            if(anchor.total_page_faults_including_children > 0) {
+                snprintf(is_measuring ? log_line : (log_line + log_line_ptr), is_measuring ? 0 : measured_size, " PF: %ld", anchor.total_page_faults_excluding_children);
+                if (anchor.byte_count > 0) {
+                    snprintf(is_measuring ? log_line : (log_line + log_line_ptr), is_measuring ? 0 : measured_size, " (%0.4fk/fault)", (f64) anchor.byte_count / (anchor.total_page_faults_excluding_children * 1024.0));
+                }
+                if (anchor.total_page_faults_excluding_children != anchor.total_page_faults_including_children) {
+                    snprintf(is_measuring ? log_line : (log_line + log_line_ptr), is_measuring ? 0 : measured_size, " PF: %ld", anchor.total_page_faults_including_children);
+                    if (anchor.byte_count > 0) {
+                        snprintf(is_measuring ? log_line : (log_line + log_line_ptr), is_measuring ? 0 : measured_size, " (%0.4fk/fault)", (f64) anchor.byte_count / (anchor.total_page_faults_including_children * 1024.0));
+                    }
+                    snprintf(is_measuring ? log_line : (log_line + log_line_ptr), is_measuring ? 0 : measured_size, " w/children");
+                }
             }
             if (log_line == NULL && is_measuring) {
                 is_measuring = false;
@@ -506,16 +543,17 @@ bool nob_repeatition_tester_is_testing(Nob_Repeatition_Tester *tester) {
         #define measure_time_in_millis_from_elapsed nob_measure_time_in_millis_from_elapsed
         #define read_os_page_fault_count            nob_read_os_page_fault_count
         #ifndef NOB_PROFILER_NO_STDLIB
-            #define Profile_Anchor           Nob_Profile_Anchor
-            #define Profile_Anchors          Nob_Profile_Anchors
-            #define Profile_Block            Nob_Profile_Block
-            #define Profile_Blocks           Nob_Profile_Blocks
-            #define Profiler                 Nob_Profiler
-            #define reset_profiler           nob_reset_profiler
-            #define start_profile_at_anchor  nob_start_profile_at_anchor
-            #define start_profile            nob_start_profile
-            #define end_profile              nob_end_profile
-            #define log_profiler             nob_log_profiler
+            #define Profile_Anchor             Nob_Profile_Anchor
+            #define Profile_Anchors            Nob_Profile_Anchors
+            #define Profile_Block              Nob_Profile_Block
+            #define Profile_Blocks             Nob_Profile_Blocks
+            #define Profiler_Start_Profile_Opt Nob_Profiler_Start_Profile_Opt
+            #define Profiler                   Nob_Profiler
+            #define reset_profiler             nob_reset_profiler
+            #define start_profile_at_anchor    nob_start_profile_at_anchor
+            #define start_profile              nob_start_profile
+            #define end_profile                nob_end_profile
+            #define log_profiler               nob_log_profiler
         #endif // NOB_PROFILER_NO_STDLIB
         #define Repeatition_Test_Mode            Nob_Repeatition_Test_Mode
         #define REPEATITION_MODE_UNINITIALIZED   NOB_REPEATITION_MODE_UNINITIALIZED
