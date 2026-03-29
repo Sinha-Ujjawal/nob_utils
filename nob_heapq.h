@@ -1,6 +1,10 @@
 #ifndef NOB_HEAPQ_H_
 #define NOB_HEAPQ_H_
 
+#ifndef NOB_HEAP_APPEND
+#define NOB_HEAP_APPEND(heap, entry) nob_da_append((heap), (entry))
+#endif // NOB_HEAP_APPEND
+
 #define nob_lt(x, y) (x) <  (y)
 #define nob_le(x, y) (x) <= (y)
 #define nob_gt(x, y) (x) >  (y)
@@ -64,7 +68,7 @@
 #define nob_heappush(heap, arity, cmp_fn, entry)                  \
     do {                                                          \
         NOB_ASSERT((arity) >= 2 && "Arity must at least be 2");   \
-        nob_da_append((heap), (entry));                           \
+        NOB_HEAP_APPEND((heap), (entry));                         \
         nob__upheap(*(heap), (arity), cmp_fn, (heap)->count - 1); \
     } while(0);
 
