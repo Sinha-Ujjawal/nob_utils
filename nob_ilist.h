@@ -20,7 +20,11 @@
     x <-> x <-> x
 */
 
+#ifndef NOB_ASSERT
 #include <assert.h>
+#define NOB_ASSERT assert
+#endif // NOB_ASSERT
+
 #include <stdbool.h>
 
 #define NOB_ILIST_FIELDS \
@@ -67,9 +71,9 @@
 #define nob_ilist_prepend(ilist, root, idx)                                                                        \
     do {                                                                                                           \
         size_t _nob_ilist_prepend_root = (root);                                                                   \
-        assert(_nob_ilist_prepend_root > 0);                                                                       \
+        NOB_ASSERT(_nob_ilist_prepend_root > 0);                                                                   \
         size_t _nob_ilist_prepend_idx  = (idx);                                                                    \
-        assert(_nob_ilist_prepend_idx > 0);                                                                        \
+        NOB_ASSERT(_nob_ilist_prepend_idx > 0);                                                                    \
         if (_nob_ilist_prepend_root == _nob_ilist_prepend_idx) break;                                              \
         nob_ilist_delink(ilist, _nob_ilist_prepend_idx);                                                           \
                                                                                                                    \
@@ -89,16 +93,16 @@
 #define nob_ilist_shift(ilist, root)                                      \
     do {                                                                  \
         size_t _nob_ilist_shift_root = (root);                            \
-        assert(_nob_ilist_shift_root > 0);                                \
+        NOB_ASSERT(_nob_ilist_shift_root > 0);                            \
         nob_ilist_delink(ilist, ilist[_nob_ilist_shift_root].firstChild); \
     } while(0)
 
 #define nob_ilist_append(ilist, root, idx)                                                                       \
     do {                                                                                                         \
         size_t _nob_ilist_append_root = (root);                                                                  \
-        assert(_nob_ilist_append_root > 0);                                                                      \
+        NOB_ASSERT(_nob_ilist_append_root > 0);                                                                  \
         size_t _nob_ilist_append_idx  = (idx);                                                                   \
-        assert(_nob_ilist_append_idx > 0);                                                                       \
+        NOB_ASSERT(_nob_ilist_append_idx > 0);                                                                   \
         if (_nob_ilist_append_root == _nob_ilist_append_idx) break;                                              \
         nob_ilist_delink(ilist, _nob_ilist_append_idx);                                                          \
         if (ilist[_nob_ilist_append_root].firstChild == 0) {                                                     \
@@ -117,7 +121,7 @@
 #define nob_ilist_pop(ilist, root)                                                         \
     do {                                                                                   \
         size_t _nob_ilist_pop_root = (root);                                               \
-        assert(_nob_ilist_pop_root > 0);                                                   \
+        NOB_ASSERT(_nob_ilist_pop_root > 0);                                               \
         nob_ilist_delink(ilist, ilist[ilist[_nob_ilist_pop_root].firstChild].prevSibling); \
     } while(0)
 

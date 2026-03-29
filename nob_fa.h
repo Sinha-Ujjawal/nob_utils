@@ -1,6 +1,11 @@
 #ifndef NOB_FA_H_
 #define NOB_FA_H_
 
+#ifndef NOB_ASSERT
+#include <assert.h>
+#define NOB_ASSERT assert
+#endif // NOB_ASSERT
+
 #include <string.h>
 
 /* The Fixed Array `fa` is parameterized by T and FIXED_SIZE should be of the form:

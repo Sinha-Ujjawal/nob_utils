@@ -1,6 +1,11 @@
 #ifndef NOB_DEQUE_H_
 #define NOB_DEQUE_H_
 
+#ifndef NOB_ASSERT
+#include <assert.h>
+#define NOB_ASSERT assert
+#endif // NOB_ASSERT
+
 #include <stdlib.h>
 #include <string.h>
 

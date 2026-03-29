@@ -1,6 +1,11 @@
 #ifndef NOB_HEAPQ_H_
 #define NOB_HEAPQ_H_
 
+#ifndef NOB_ASSERT
+#include <assert.h>
+#define NOB_ASSERT assert
+#endif // NOB_ASSERT
+
 #ifndef NOB_HEAP_APPEND
 #define NOB_HEAP_APPEND(heap, entry) nob_da_append((heap), (entry))
 #endif // NOB_HEAP_APPEND

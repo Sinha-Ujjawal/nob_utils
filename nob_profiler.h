@@ -6,6 +6,11 @@
    Reference: https://www.computerenhance.com/p/profiling-recursive-blocks
 */
 
+#ifndef NOB_ASSERT
+#include <assert.h>
+#define NOB_ASSERT assert
+#endif // NOB_ASSERT
+
 #include <stdint.h>
 
 typedef uint32_t u32;
