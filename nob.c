@@ -13,8 +13,8 @@ typedef struct {
 
 #define mk_test(name, ...) {                                                                \
     .test_binary_exec = "./" #name,                                                         \
-    .source_files = (char const*[]){ #name ".c", __VA_ARGS__ },                             \
-    .num_source_files = 1 + (sizeof((char const*[]){ __VA_ARGS__ }) / sizeof(char const*)), \
+    .source_files = (char const*[]){ #name ".c", "nob.h", __VA_ARGS__ },                    \
+    .num_source_files = 2 + (sizeof((char const*[]){ __VA_ARGS__ }) / sizeof(char const*)), \
 }
 
 Test_Case test_cases[] = {
@@ -25,6 +25,7 @@ Test_Case test_cases[] = {
     mk_test(test_nob_ht       , "nob_ht.h", "nob_hash.h"),
     mk_test(test_nob_ilist    , "nob_ilist.h"),
     mk_test(test_nob_profiler , "nob_profiler.h"),
+    mk_test(test_nob_graph    , "nob_graph.h", "nob_deque.h", "nob_ht.h", "nob_hash.h"),
 };
 
 bool build(bool always_build) {

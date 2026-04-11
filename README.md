@@ -27,6 +27,7 @@ See `test_` files to see few example usage of this library.
 | [`nob_ht.h`](./nob_ht.h) | It is a library that provides hash table implementation using [Open Addressing](https://en.wikipedia.org/wiki/Open_addressing) | [`nob_hash.h`](./nob_hash.h) for the hash functions |
 | [`nob_ilist.h`](./nob_ilist.h) | It is a library that provides an implementation of "Intrusive" list that was discussed in Wookash Podcast: Avoiding Modern C++ \| Anton Mikhailov (https://youtu.be/ShSGHb65f3M?si=EBeDwAQ3FkwtzqBv) | No Dependencies |
 | [`nob_profiler.h`](./nob_profiler.h) | It is a basic profiler which was discussed by Casey Muratori on his [Computer Enhance Course](https://www.computerenhance.com/p/profiling-recursive-blocks) | [`nob.h`](./nob.h) for nob_log and [`nob_fa.h`](./nob_fa.h) for the anchors and blocks |
+| [`nob_graph.h`](./nob_graph.h) | Simple graph library | Built on top of [`nob.h`](./nob.h), [`nob_deque.h`](./nob_deque.h) and [`nob_ht.h`](./nob_ht.h) |
 
 ## Copyrights
 
