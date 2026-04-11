@@ -1,7 +1,4 @@
 nob
-test_nob_heapq
-test_nob_deque
-test_nob_hash
-test_nob_ht
+build
 *.old
 *.swp

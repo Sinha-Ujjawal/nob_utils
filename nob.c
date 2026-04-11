@@ -1,5 +1,7 @@
 #define NOB_IMPLEMENTATION
-#include "nob.h"
+#include "thirdparty/nob.h"
+
+#define BUILD_DIR "build"
 
 Cmd cmd = {0};
 Procs procs = {0};
@@ -11,21 +13,21 @@ typedef struct {
     bool check_to_build_or_run;
 } Test_Case;
 
-#define mk_test(name, ...) {                                                                \
-    .test_binary_exec = "./" #name,                                                         \
-    .source_files = (char const*[]){ #name ".c", "nob.h", __VA_ARGS__ },                    \
-    .num_source_files = 2 + (sizeof((char const*[]){ __VA_ARGS__ }) / sizeof(char const*)), \
+#define mk_test(name, ...) {                                                                 \
+    .test_binary_exec = BUILD_DIR "/" #name,                                                 \
+    .source_files = (char const*[]){ "tests/" #name ".c", "thirdparty/nob.h", __VA_ARGS__ }, \
+    .num_source_files = 2 + (sizeof((char const*[]){ __VA_ARGS__ }) / sizeof(char const*)),  \
 }
 
 Test_Case test_cases[] = {
-    mk_test(test_nob_fa       , "nob_fa.h"),
-    mk_test(test_nob_heapq    , "nob_heapq.h"),
-    mk_test(test_nob_deque    , "nob_deque.h"),
-    mk_test(test_nob_hash     , "nob_hash.h"),
-    mk_test(test_nob_ht       , "nob_ht.h", "nob_hash.h"),
-    mk_test(test_nob_ilist    , "nob_ilist.h"),
-    mk_test(test_nob_profiler , "nob_profiler.h"),
-    mk_test(test_nob_graph    , "nob_graph.h", "nob_deque.h", "nob_ht.h", "nob_hash.h"),
+    mk_test(test_nob_fa       , "src/nob_fa.h"),
+    mk_test(test_nob_heapq    , "src/nob_heapq.h"),
+    mk_test(test_nob_deque    , "src/nob_deque.h"),
+    mk_test(test_nob_hash     , "src/nob_hash.h"),
+    mk_test(test_nob_ht       , "src/nob_ht.h", "src/nob_hash.h"),
+    mk_test(test_nob_ilist    , "src/nob_ilist.h"),
+    mk_test(test_nob_profiler , "src/nob_profiler.h"),
+    mk_test(test_nob_graph    , "src/nob_graph.h", "src/nob_deque.h", "src/nob_ht.h", "src/nob_hash.h"),
 };
 
 bool build(bool always_build) {
@@ -40,7 +42,12 @@ bool build(bool always_build) {
             rebuild_is_needed = needs_rebuild(test_case.test_binary_exec, test_case.source_files, test_case.num_source_files);
         }
         if (rebuild_is_needed > 0) {
-            cmd_append(&cmd, "cc", "-O2", "-Wall", "-Wextra", "-Werror", "-Wno-unused-result", "-Wno-unused-value", "-o", test_case.test_binary_exec, test_case.source_files[0]);
+            cmd_append(&cmd,
+                "cc",
+                "-I./thirdparty", "-I./src",
+                "-O2",\
+                "-Wall", "-Wextra", "-Werror", "-Wno-unused-result", "-Wno-unused-value",
+                "-o", test_case.test_binary_exec, test_case.source_files[0]);
             if (!cmd_run(&cmd, .async = &procs)) return NULL;
         }
     }
@@ -64,6 +71,8 @@ bool run() {
 int main(int argc, char **argv) {
     GO_REBUILD_URSELF(argc, argv);
     int result = 1;
+
+    mkdir_if_not_exists(BUILD_DIR);
 
     char const* program = shift(argv, argc);
 
