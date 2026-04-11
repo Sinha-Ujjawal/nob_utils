@@ -58,8 +58,7 @@ typedef struct {
 } Nob_Profile_Anchor;
 
 typedef struct {
-    Nob_Profile_Anchor items[NOB_ANCHORS_RESERVE_SIZE];
-    size_t count;
+    nob_embed_fa(Nob_Profile_Anchor, NOB_ANCHORS_RESERVE_SIZE);
 } Nob_Profile_Anchors;
 
 typedef struct {
@@ -77,8 +76,7 @@ typedef struct {
 } Nob_Profile_Block;
 
 typedef struct {
-    Nob_Profile_Block items[NOB_BLOCKS_RESERVE_SIZE];
-    size_t count;
+    nob_embed_fa(Nob_Profile_Block, NOB_BLOCKS_RESERVE_SIZE);
 } Nob_Profile_Blocks;
 
 typedef struct {
