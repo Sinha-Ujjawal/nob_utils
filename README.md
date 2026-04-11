@@ -1,4 +1,4 @@
-# `nob_utils.h` - Utility plugin libraries for [nob.h](https://github.com/tsoding/nob.h)
+# [`nob_utils.h`](./src/nob_utils.h) - Utility plugin libraries for [nob.h](https://github.com/tsoding/nob.h)
 
 This repository contains libraries build on top of or in style of [nob.h](https://github.com/tsoding/nob.h)
 
