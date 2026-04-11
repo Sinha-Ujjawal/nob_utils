@@ -5,8 +5,7 @@
 #include "nob_fa.h"
 
 typedef struct {
-    int items[10];
-    size_t count;
+    embed_fa(int, 10);
 } Int_Stack;
 
 int main(void) {

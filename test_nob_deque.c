@@ -4,10 +4,7 @@
 #include "nob_utils.h"
 
 typedef struct {
-    int *items;
-    size_t begin;
-    size_t count;
-    size_t capacity;
+    embed_deque(int);
 } Ints;
 
 int main(void) {

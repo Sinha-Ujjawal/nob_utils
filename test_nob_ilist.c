@@ -4,7 +4,7 @@
 
 typedef struct {
     size_t x;
-    ILIST_FIELDS
+    embed_ilist_node;
 } MyIlistNode;
 MyIlistNode xs[10] = {0};
 

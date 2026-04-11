@@ -11,16 +11,12 @@
 #define is_cstr_equal(x, y) (strcmp(x, y) == 0)
 
 typedef struct {
-    char *key;
-    size_t value;
-    bool is_occupied;
+    embed_ht_kv_slot(char *, size_t);
     bool is_not_new;
 } My_KV_Slot;
 
 typedef struct {
-    My_KV_Slot *items;
-    size_t count;
-    size_t capacity;
+    embed_ht_with_slot(My_KV_Slot);
 } My_Hash_Table;
 
 int main(void) {

@@ -17,6 +17,12 @@ struct {
 } fa;
 */
 
+#define nob_embed_fa(T, size) \
+    struct {                  \
+        T items[size];        \
+        size_t count;         \
+    }
+
 // Append an item to a fixed array. items field must be a fixed size array.
 #define nob_fa_append(fa, item)                            \
     (NOB_ASSERT((fa)->count < NOB_ARRAY_LEN((fa)->items)), \
@@ -58,6 +64,7 @@ struct {
         #define fa_pop              nob_fa_pop
         #define fa_remove_unordered nob_fa_remove_unordered
         #define fa_foreach          nob_fa_foreach
+        #define embed_fa            nob_embed_fa
     #endif // NOB_UNSTRIP_PREFIX
 #endif // NOB_FA_STRIP_PREFIX_GUARD_
 

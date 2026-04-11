@@ -23,6 +23,7 @@ Test_Case test_cases[] = {
     mk_test(test_nob_deque    , "nob_deque.h"),
     mk_test(test_nob_hash     , "nob_hash.h"),
     mk_test(test_nob_ht       , "nob_ht.h", "nob_hash.h"),
+    mk_test(test_nob_ilist    , "nob_ilist.h"),
     mk_test(test_nob_profiler , "nob_profiler.h"),
 };
 

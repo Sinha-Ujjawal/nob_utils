@@ -38,6 +38,28 @@ struct {
 
 */
 
+#define nob_embed_ht_with_slot(T) \
+    struct {                      \
+        T *items;                 \
+        size_t count;             \
+        size_t capacity;          \
+    }
+
+#define nob_embed_ht_key_slot(K) \
+    struct {                     \
+        K key;                   \
+        bool is_occupied;        \
+    }
+
+#define nob_embed_ht_kv_slot(K, V) \
+    struct {                       \
+        nob_embed_ht_key_slot(K);  \
+        V value;                   \
+    }
+
+#define nob_embed_ht_with_key(K)   nob_embed_ht_with_slot(nob_embed_ht_key_slot(K))
+#define nob_embed_ht_with_kv(K, V) nob_embed_ht_with_slot(nob_embed_ht_kv_slot(K, V))
+
 #define nob__ht_find_slot(ht, hash_fn, is_eql_fn, key_expr, out)                                                           \
     do {                                                                                                                   \
         NOB_ASSERT(((ht).capacity > 0) && (((ht).capacity & ((ht).capacity - 1)) == 0) && "Capacity must be power of 2!"); \
@@ -148,13 +170,18 @@ struct {
 #ifndef NOB_HT_STRIP_PREFIX_GUARD_
 #define NOB_HT_STRIP_PREFIX_GUARD_
     #ifndef NOB_UNSTRIP_PREFIX
-        #define HT_INIT_CAP   NOB_HT_INIT_CAP
-        #define HT_NOT_FOUND  NOB_HT_NOT_FOUND
-        #define ht_reserve    nob_ht_reserve
-        #define ht_get_key    nob_ht_get_key
-        #define ht_insert_key nob_ht_insert_key
-        #define ht_delete_key nob_ht_delete_key
-        #define ht_foreach    nob_ht_foreach
+        #define HT_INIT_CAP        NOB_HT_INIT_CAP
+        #define HT_NOT_FOUND       NOB_HT_NOT_FOUND
+        #define ht_reserve         nob_ht_reserve
+        #define ht_get_key         nob_ht_get_key
+        #define ht_insert_key      nob_ht_insert_key
+        #define ht_delete_key      nob_ht_delete_key
+        #define ht_foreach         nob_ht_foreach
+        #define embed_ht_with_slot nob_embed_ht_with_slot
+        #define embed_ht_key_slot  nob_embed_ht_key_slot
+        #define embed_ht_kv_slot   nob_embed_ht_kv_slot
+        #define embed_ht_with_key  nob_embed_ht_with_key
+        #define embed_ht_with_kv   nob_embed_ht_with_kv
     #endif // NOB_UNSTRIP_PREFIX
 #endif // NOB_HT_STRIP_PREFIX_GUARD_
 

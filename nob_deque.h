@@ -26,6 +26,14 @@ struct {
 
 */
 
+#define nob_embed_deque(T) \
+    struct {               \
+        T *items;          \
+        size_t begin;      \
+        size_t count;      \
+        size_t capacity;   \
+    }
+
 #define nob__deque_resize(dq, new_capacity)                                                                                                             \
     do {                                                                                                                                                \
         size_t _nob__deque_resize_new_begin = (new_capacity) >> 1;                                                                                      \
@@ -125,6 +133,7 @@ struct {
         #define deque_shift    nob_deque_shift
         #define deque_first    nob_deque_first
         #define deque_foreach  nob_deque_foreach
+        #define embed_deque    nob_embed_deque
     #endif // NOB_UNSTRIP_PREFIX
 #endif // NOB_DEQUE_STRIP_PREFIX_GUARD_
 

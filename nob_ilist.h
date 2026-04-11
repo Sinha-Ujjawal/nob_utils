@@ -33,6 +33,11 @@
     size_t prevSibling;  \
     size_t firstChild;
 
+#define nob_embed_ilist_node \
+    struct {                 \
+        NOB_ILIST_FIELDS     \
+    }
+
 #define nob_ilist_delink(ilist, idx)                                                   \
     do {                                                                               \
         size_t _nob_ilist_delink_idx = (idx);                                          \
@@ -154,13 +159,14 @@ void nob__ilist_iterator_update(Nob__Ilist_Iterator *it, size_t newIdx) {
 #ifndef NOB_ILIST_STRIP_PREFIX_GUARD_
 #define NOB_ILIST_STRIP_PREFIX_GUARD_
     #ifndef NOB_UNSTRIP_PREFIX
-        #define ILIST_FIELDS  NOB_ILIST_FIELDS
-        #define ilist_delink  nob_ilist_delink
-        #define ilist_prepend nob_ilist_prepend
-        #define ilist_shift   nob_ilist_shift
-        #define ilist_append  nob_ilist_append
-        #define ilist_pop     nob_ilist_pop
-        #define ilist_foreach nob_ilist_foreach
+        #define ILIST_FIELDS     NOB_ILIST_FIELDS
+        #define ilist_delink     nob_ilist_delink
+        #define ilist_prepend    nob_ilist_prepend
+        #define ilist_shift      nob_ilist_shift
+        #define ilist_append     nob_ilist_append
+        #define ilist_pop        nob_ilist_pop
+        #define ilist_foreach    nob_ilist_foreach
+        #define embed_ilist_node nob_embed_ilist_node
     #endif // NOB_UNSTRIP_PREFIX
 #endif // NOB_ILIST_STRIP_PREFIX_GUARD_
 

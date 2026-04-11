@@ -9,4 +9,18 @@
 #include "nob_ilist.h"
 #include "nob_profiler.h"
 
+#define nob_embed_da(T)  \
+    struct {             \
+        T *items;        \
+        size_t count;    \
+        size_t capacity; \
+    }
+
+#ifndef NOB_UTILS_STRIP_PREFIX_GUARD_
+#define NOB_UTILS_STRIP_PREFIX_GUARD_
+    #ifndef NOB_UNSTRIP_PREFIX
+        #define embed_da nob_embed_da
+    #endif // NOB_UNSTRIP_PREFIX
+#endif // NOB_UTILS_STRIP_PREFIX_GUARD_
+
 #endif // NOB_UTILS_H_

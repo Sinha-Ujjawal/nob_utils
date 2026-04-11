@@ -8,14 +8,11 @@
 
 // --- Heap Structures ---
 typedef struct {
-    int *items;
-    size_t count;
-    size_t capacity;
+    embed_da(int);
 } Dynamic_Heap;
 
 typedef struct {
-    int items[200]; // Fixed capacity
-    size_t count;
+    embed_fa(int, 200);
 } Fixed_Heap;
 
 // --- Test Constants ---
