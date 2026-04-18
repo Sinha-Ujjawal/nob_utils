@@ -28,6 +28,7 @@ Test_Case test_cases[] = {
     mk_test(test_nob_ilist    , "src/nob_ilist.h"),
     mk_test(test_nob_profiler , "src/nob_profiler.h"),
     mk_test(test_nob_graph    , "src/nob_graph.h", "src/nob_deque.h", "src/nob_ht.h", "src/nob_hash.h"),
+    mk_test(test_nob_rc       , "src/nob_rc.h"),
 };
 
 bool build(bool always_build) {
@@ -43,10 +44,10 @@ bool build(bool always_build) {
         }
         if (rebuild_is_needed > 0) {
             cmd_append(&cmd,
-                "cc",
+                "clang",
                 "-I./thirdparty", "-I./src",
                 "-O2",\
-                "-Wall", "-Wextra", "-Werror", "-Wno-unused-result", "-Wno-unused-value",
+                "-Wall", "-Wextra", "-Werror", "-Wswitch-enum",
                 "-o", test_case.test_binary_exec, test_case.source_files[0]);
             if (!cmd_run(&cmd, .async = &procs)) return NULL;
         }
@@ -72,7 +73,7 @@ int main(int argc, char **argv) {
     GO_REBUILD_URSELF(argc, argv);
     int result = 1;
 
-    mkdir_if_not_exists(BUILD_DIR);
+    if (!mkdir_if_not_exists(BUILD_DIR)) return_defer(false);
 
     char const* program = shift(argv, argc);
 

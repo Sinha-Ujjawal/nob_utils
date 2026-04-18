@@ -14,7 +14,7 @@ int main(void) {
 }
 ```
 
-See `test_` files in `tests`[./tests/] directory to see few example usage of this library.
+See `test_` files in [`tests`](./tests/) directory to see few example usage of this library.
 
 ## Current Implementations
 
@@ -28,6 +28,9 @@ See `test_` files in `tests`[./tests/] directory to see few example usage of thi
 | [`nob_ilist.h`](./src/nob_ilist.h) | It is a library that provides an implementation of "Intrusive" list that was discussed in Wookash Podcast: Avoiding Modern C++ \| Anton Mikhailov (https://youtu.be/ShSGHb65f3M?si=EBeDwAQ3FkwtzqBv) | No Dependencies |
 | [`nob_profiler.h`](./src/nob_profiler.h) | It is a basic profiler which was discussed by Casey Muratori on his [Computer Enhance Course](https://www.computerenhance.com/p/profiling-recursive-blocks) | [`nob.h`](./thirdparty/nob.h) for nob_log and [`nob_fa.h`](./src/nob_fa.h) for the anchors and blocks |
 | [`nob_graph.h`](./src/nob_graph.h) | Simple graph library | Built on top of [`nob.h`](./thirdparty/nob.h), [`nob_deque.h`](./src/nob_deque.h) and [`nob_ht.h`](./src/nob_ht.h) |
+| [`nob_rc.h`](./src/nob_rc.h) | A Simple Ref. Counting Allocator inspired from Tsoding Daily - [Reference Counting in C](https://youtu.be/iotrPxUnTdQ) | No Dependencies |
+
+**Note No Dependencies except libc :)**
 
 ## Copyrights
 
