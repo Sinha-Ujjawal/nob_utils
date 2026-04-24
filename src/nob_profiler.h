@@ -42,8 +42,13 @@ u64 nob_read_os_page_fault_count(void);
 #define NOB_PROFILER_BLOCK_TIMER_FREQ nob_guess_timer_freq(100, NOB_PROFILER_BLOCK_TIMER)
 #endif // NOB_PROFILER_BLOCK_TIMER_FREQ
 
+#ifndef NOB_ANCHORS_RESERVE_SIZE
 #define NOB_ANCHORS_RESERVE_SIZE (1 << 12)
+#endif // NOB_ANCHORS_RESERVE_SIZE
+
+#ifndef NOB_BLOCKS_RESERVE_SIZE
 #define NOB_BLOCKS_RESERVE_SIZE  (1 << 17)
+#endif // NOB_BLOCKS_RESERVE_SIZE
 
 typedef struct {
     size_t anchor_idx;
@@ -365,16 +370,16 @@ void nob_log_profiler(Nob_Profiler profiler) {
                 log_line_ptr += snprintf(is_measuring ? log_line : (log_line + log_line_ptr), is_measuring ? 0 : measured_size, " %.3fmb at %.2fgb/s", mbs, gbps);
             }
             if(anchor.total_page_faults_including_children > 0) {
-                snprintf(is_measuring ? log_line : (log_line + log_line_ptr), is_measuring ? 0 : measured_size, " PF: %ld", anchor.total_page_faults_excluding_children);
+                log_line_ptr += snprintf(is_measuring ? log_line : (log_line + log_line_ptr), is_measuring ? 0 : measured_size, " PF: %ld", anchor.total_page_faults_excluding_children);
                 if (anchor.byte_count > 0) {
-                    snprintf(is_measuring ? log_line : (log_line + log_line_ptr), is_measuring ? 0 : measured_size, " (%0.4fk/fault)", (f64) anchor.byte_count / (anchor.total_page_faults_excluding_children * 1024.0));
+                    log_line_ptr += snprintf(is_measuring ? log_line : (log_line + log_line_ptr), is_measuring ? 0 : measured_size, " (%0.4fk/fault)", (f64) anchor.byte_count / (anchor.total_page_faults_excluding_children * 1024.0));
                 }
                 if (anchor.total_page_faults_excluding_children != anchor.total_page_faults_including_children) {
-                    snprintf(is_measuring ? log_line : (log_line + log_line_ptr), is_measuring ? 0 : measured_size, " PF: %ld", anchor.total_page_faults_including_children);
+                    log_line_ptr += snprintf(is_measuring ? log_line : (log_line + log_line_ptr), is_measuring ? 0 : measured_size, " PF: %ld", anchor.total_page_faults_including_children);
                     if (anchor.byte_count > 0) {
-                        snprintf(is_measuring ? log_line : (log_line + log_line_ptr), is_measuring ? 0 : measured_size, " (%0.4fk/fault)", (f64) anchor.byte_count / (anchor.total_page_faults_including_children * 1024.0));
+                        log_line_ptr += snprintf(is_measuring ? log_line : (log_line + log_line_ptr), is_measuring ? 0 : measured_size, " (%0.4fk/fault)", (f64) anchor.byte_count / (anchor.total_page_faults_including_children * 1024.0));
                     }
-                    snprintf(is_measuring ? log_line : (log_line + log_line_ptr), is_measuring ? 0 : measured_size, " w/children");
+                    log_line_ptr += snprintf(is_measuring ? log_line : (log_line + log_line_ptr), is_measuring ? 0 : measured_size, " w/children");
                 }
             }
             if (log_line == NULL && is_measuring) {
@@ -463,7 +468,7 @@ void nob__print_value(char const *label, Nob_Repeatition_Value value, u64 cpu_ti
             }
         }
         if(E[NOB_REPEATITION_VALUE_MEM_PAGE_FAULTS] > 0) {
-            snprintf(is_measuring ? log_line : (log_line + log_line_ptr), is_measuring ? 0 : measured_size, " PF: %0.4f (%0.4fk/fault)", E[NOB_REPEATITION_VALUE_MEM_PAGE_FAULTS], E[NOB_REPEATITION_VALUE_MEM_BYTE_COUNT] / (E[NOB_REPEATITION_VALUE_MEM_PAGE_FAULTS] * 1024.0));
+            log_line_ptr += snprintf(is_measuring ? log_line : (log_line + log_line_ptr), is_measuring ? 0 : measured_size, " PF: %0.4f (%0.4fk/fault)", E[NOB_REPEATITION_VALUE_MEM_PAGE_FAULTS], E[NOB_REPEATITION_VALUE_MEM_BYTE_COUNT] / (E[NOB_REPEATITION_VALUE_MEM_PAGE_FAULTS] * 1024.0));
         }
         if (log_line == NULL && is_measuring) {
             is_measuring = false;
