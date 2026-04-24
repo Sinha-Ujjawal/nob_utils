@@ -47,7 +47,7 @@ bool build(bool always_build) {
                 "clang",
                 "-I./thirdparty", "-I./src",
                 "-O2",\
-                "-Wall", "-Wextra", "-Werror", "-Wswitch-enum",
+                "-Wall", "-Wextra", "-Werror", "-Wswitch-enum", "-ggdb",
                 "-o", test_case.test_binary_exec, test_case.source_files[0]);
             if (!cmd_run(&cmd, .async = &procs)) return NULL;
         }
