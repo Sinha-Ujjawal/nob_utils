@@ -144,6 +144,22 @@ void nob_repeatition_tester_end_timer(Nob_Repeatition_Tester *tester);
 void nob_repeatition_tester_count_bytes(Nob_Repeatition_Tester *tester, size_t byte_count);
 bool nob_repeatition_tester_is_testing(Nob_Repeatition_Tester *tester);
 
+#define NOB_REPEATITION_TEST_UNWRAP(...) __VA_ARGS__
+
+#define nob_repeatition_test(label, tester, cpu_timer_freq, seconds_to_try, total_size, init, to_measure, cleanup) \
+    do {                                                                                                           \
+        nob_log(INFO, "START: repeatition_" #label);                                                               \
+        repeatition_tester_new_test_wave(&(tester), (total_size), (cpu_timer_freq), (seconds_to_try));             \
+        while (repeatition_tester_is_testing(&(tester))) {                                                         \
+            NOB_REPEATITION_TEST_UNWRAP init                                                                       \
+            repeatition_tester_begin_timer(&(tester));                                                             \
+            NOB_REPEATITION_TEST_UNWRAP to_measure                                                                 \
+            repeatition_tester_end_timer(&(tester));                                                               \
+            NOB_REPEATITION_TEST_UNWRAP cleanup                                                                    \
+        }                                                                                                          \
+        nob_log(INFO, "END: repeatition_test_" #label "\n");                                                       \
+    } while(0);
+
 #ifdef NOB_PROFILER_IMPLEMENTATION
 
 #if _WIN32
@@ -564,6 +580,7 @@ bool nob_repeatition_tester_is_testing(Nob_Repeatition_Tester *tester) {
             #define repeatition_tester_end_timer        nob_repeatition_tester_end_timer
             #define repeatition_tester_count_bytes      nob_repeatition_tester_count_bytes
             #define repeatition_tester_is_testing       nob_repeatition_tester_is_testing
+            #define repeatition_test                    nob_repeatition_test
     #endif // NOB_UNSTRIP_PREFIX
 #endif // NOB_PROFILER_STRIP_PREFIX_GUARD_
 

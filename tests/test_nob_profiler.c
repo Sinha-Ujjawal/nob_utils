@@ -158,7 +158,6 @@ int main(void) {
         log_profiler(profiler);
     }
 
-
     {
        u64 n = 4, k = 1;
        reset_profiler(&profiler);
@@ -198,14 +197,16 @@ int main(void) {
         size_t file_size;
         if (!get_file_size(file_path, &file_size)) return 1;
         buffer = realloc(buffer, file_size);
-        Repeatition_Tester tester = {0};
         u64 cpu_timer_freq = (u64) guess_cpu_timer_freq(100);
         u64 seconds_to_try = 10;
 
         for (size_t i = 0; i < 3; i++) {
-            repeatition_tester_new_test_wave(&tester, file_size, cpu_timer_freq, seconds_to_try);
-            while (repeatition_tester_is_testing(&tester)) {
-                repeatition_tester_begin_timer(&tester);
+            Repeatition_Tester tester = {0};
+            repeatition_test(read_file, tester, cpu_timer_freq, seconds_to_try, file_size,
+                // Init
+                (),
+                // To Measure
+                (
                     FILE *f = fopen(file_path, "rb");
                     if (f == NULL) {
                         nob_log(ERROR, "Could not open file: %s for reading: %s", file_path, strerror(errno));
@@ -217,9 +218,12 @@ int main(void) {
                         return 1;
                     }
                     fclose(f);
-                repeatition_tester_end_timer(&tester);
-                repeatition_tester_count_bytes(&tester, bytes_read);
-            }
+                ),
+                // Cleanup
+                (
+                    repeatition_tester_count_bytes(&tester, bytes_read);
+                )
+            );
         }
         free(buffer);
     }
