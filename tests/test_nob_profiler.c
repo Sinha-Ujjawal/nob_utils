@@ -202,7 +202,7 @@ int main(void) {
 
         for (size_t i = 0; i < 3; i++) {
             Repeatition_Tester tester = {0};
-            repeatition_test(read_file, tester, cpu_timer_freq, seconds_to_try, file_size,
+            repeatition_test("read_file", tester, cpu_timer_freq, seconds_to_try, file_size,
                 // Init
                 (),
                 // To Measure

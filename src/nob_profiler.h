@@ -148,7 +148,7 @@ bool nob_repeatition_tester_is_testing(Nob_Repeatition_Tester *tester);
 
 #define nob_repeatition_test(label, tester, cpu_timer_freq, seconds_to_try, total_size, init, to_measure, cleanup) \
     do {                                                                                                           \
-        nob_log(INFO, "START: repeatition_" #label);                                                               \
+        nob_log(INFO, "START: repeatition_%s", label);                                                             \
         repeatition_tester_new_test_wave(&(tester), (total_size), (cpu_timer_freq), (seconds_to_try));             \
         while (repeatition_tester_is_testing(&(tester))) {                                                         \
             NOB_REPEATITION_TEST_UNWRAP init                                                                       \
@@ -157,7 +157,7 @@ bool nob_repeatition_tester_is_testing(Nob_Repeatition_Tester *tester);
             repeatition_tester_end_timer(&(tester));                                                               \
             NOB_REPEATITION_TEST_UNWRAP cleanup                                                                    \
         }                                                                                                          \
-        nob_log(INFO, "END: repeatition_test_" #label "\n");                                                       \
+        nob_log(INFO, "END: repeatition_%s\n", label);                                                             \
     } while(0);
 
 #ifdef NOB_PROFILER_IMPLEMENTATION
