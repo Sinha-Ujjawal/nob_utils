@@ -13,6 +13,7 @@
 #ifndef NOB_HT_INIT_CAP
 #define NOB_HT_INIT_CAP 256 // Make sure this is power of 2
 #endif
+static_assert(((NOB_HT_INIT_CAP) & ((NOB_HT_INIT_CAP) - 1)) == 0, "NOB_HT_INIT_CAP must be power of 2!");
 
 #ifndef NOB_HT_NOT_FOUND
 #define NOB_HT_NOT_FOUND ((size_t)-1)

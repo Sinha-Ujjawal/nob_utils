@@ -20,15 +20,16 @@ typedef struct {
 }
 
 Test_Case test_cases[] = {
-    mk_test(test_nob_fa       , "src/nob_fa.h"),
-    mk_test(test_nob_heapq    , "src/nob_heapq.h"),
-    mk_test(test_nob_deque    , "src/nob_deque.h"),
-    mk_test(test_nob_hash     , "src/nob_hash.h"),
-    mk_test(test_nob_ht       , "src/nob_ht.h", "src/nob_hash.h"),
-    mk_test(test_nob_ilist    , "src/nob_ilist.h"),
-    mk_test(test_nob_profiler , "src/nob_profiler.h"),
-    mk_test(test_nob_graph    , "src/nob_graph.h", "src/nob_deque.h", "src/nob_ht.h", "src/nob_hash.h"),
-    mk_test(test_nob_rc       , "src/nob_rc.h"),
+    mk_test(test_nob_fa                 , "src/nob_fa.h"),
+    mk_test(test_nob_heapq              , "src/nob_heapq.h"),
+    mk_test(test_nob_deque              , "src/nob_deque.h"),
+    mk_test(test_nob_hash               , "src/nob_hash.h"),
+    mk_test(test_nob_ht                 , "src/nob_ht.h", "src/nob_hash.h"),
+    mk_test(test_nob_ilist              , "src/nob_ilist.h"),
+    mk_test(test_nob_profiler           , "src/nob_profiler.h"),
+    mk_test(test_nob_graph              , "src/nob_graph.h", "src/nob_deque.h", "src/nob_ht.h", "src/nob_hash.h"),
+    mk_test(test_nob_rc                 , "src/nob_rc.h"),
+    mk_test(test_nob_profile_da_vs_deque, "src/nob_profiler.h", "src/nob_fa.h", "src/nob_deque.h"),
 };
 
 bool build(bool always_build) {
