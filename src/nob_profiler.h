@@ -524,6 +524,14 @@ bool nob_repeatition_tester_is_testing(Nob_Repeatition_Tester *tester) {
                     result->max = accum;
                 }
                 if (result->min.E[NOB_REPEATITION_VALUE_CPU_TIMER] > accum.E[NOB_REPEATITION_VALUE_CPU_TIMER]) {
+                    if (result->min.E[NOB_REPEATITION_VALUE_CPU_TIMER] < (u64) -1) { // Only clear prev. line if the min. was reported before
+                        // Clear Prev. Line
+                        // \033[1A: Move cursor up 1 line
+                        // \033[2K: Erase the entire line
+                        // \r:      Move cursor to the beginning of that line
+                        printf("\033[1A\r\033[2K");
+                        fflush(stdout);
+                    }
                     result->min = accum;
                     tester->test_started_at = current_time;
                     nob__print_value("Min", result->min, tester->cpu_timer_freq);
@@ -536,6 +544,14 @@ bool nob_repeatition_tester_is_testing(Nob_Repeatition_Tester *tester) {
         }
         if ((current_time - tester->test_started_at) > tester->try_for_time) {
             tester->mode = NOB_REPEATITION_MODE_COMPLETED;
+            {
+                // Clear Prev. Line
+                // \033[1A: Move cursor up 1 line
+                // \033[2K: Erase the entire line
+                // \r:      Move cursor to the beginning of that line
+                printf("\033[1A\r\033[2K");
+                fflush(stdout);
+            }
             nob__print_result(tester->result, tester->cpu_timer_freq);
         }
     }
