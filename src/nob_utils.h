@@ -17,6 +17,7 @@
 #include "nob_profiler.h"
 #include "nob_graph.h"
 #include "nob_rc.h"
+#include "nob_huge_page_alloc.h"
 #include "num_defs.h"
 
 #ifndef NOB_UTILS_STRIP_PREFIX_GUARD_
