@@ -16,6 +16,16 @@ int main(void) {
 
 See `test_` files in [`tests`](./tests/) directory to see few example usage of this library.
 
+## Thirdparty
+
+| Library | Reference |
+| -- | -- |
+| [`nob.h`](./thirdparty/nob.h) | https://github.com/tsoding/nob.h |
+| [`jim.h`](./thirdparty/jim.h) | https://github.com/tsoding/jim |
+| [`jimp.h`](./thirdparty/jimp.h) | https://github.com/tsoding/jim |
+
+**Note that I have modified jimp.h for my liking**
+
 ## Current Implementations
 
 | Library | Description | Dependencies |
