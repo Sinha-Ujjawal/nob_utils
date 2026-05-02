@@ -469,6 +469,12 @@ bool jimp_skip_member(Jimp *jimp) {
         }
         return jimp_object_end(jimp);
     } break;
+    case JIMP_INVALID:
+    case JIMP_EOF:
+    case JIMP_CCURLY:
+    case JIMP_CBRACKET:
+    case JIMP_COMMA:
+    case JIMP_COLON:
     default: return false;
     }
     return false;

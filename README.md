@@ -40,6 +40,7 @@ See `test_` files in [`tests`](./tests/) directory to see few example usage of t
 | [`nob_graph.h`](./src/nob_graph.h) | Simple graph library | Built on top of [`nob.h`](./thirdparty/nob.h), [`nob_deque.h`](./src/nob_deque.h) and [`nob_ht.h`](./src/nob_ht.h) |
 | [`nob_rc.h`](./src/nob_rc.h) | A Simple Ref. Counting Allocator inspired from Tsoding Daily - [Reference Counting in C](https://youtu.be/iotrPxUnTdQ) | No Dependencies |
 | [`nob_huge_page_alloc.h`](./src/nob_huge_page_alloc.h) | A simple Huge Page Allocator using MMAP (in Linux and Macos), and VirtualAlloc for Windows | No Dependencies |
+| [`nob_br.h`](./src/nob_br.h) | A simple Buffered Reader implementation | Depends on [`nob.h`](./thirdparty/nob.h) for `String_Builder`, and `nob_log` |
 
 **Note No Dependencies except libc :)**
 
