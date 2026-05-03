@@ -231,7 +231,7 @@ bool nob_jsonrpc_handle_request(Nob_JSONRPC_Session *session) {
     jim_begin(success); // success_main
     nob_jsonrpc__object_begin_with_jsonrpc_ver_and_id(success, session->request_parser);
         jim_member_key(success, "result");
-    const char *success_sink_saved = success->sink;
+    size_t success_sink_saved = success->sink_count;
 
     // Initialize Failure Jim
     Jim *failure = &session->failure;
@@ -240,7 +240,7 @@ bool nob_jsonrpc_handle_request(Nob_JSONRPC_Session *session) {
         jim_member_key(failure, "error");
         jim_object_begin(failure);
             jim_member_key(failure, "data");
-    const char *failure_sink_saved = failure->sink;
+    size_t failure_sink_saved = failure->sink_count;
 
     if (error_code == NOB_JSONRPC_ERROR_CODE_SUCCESS && session->method_handler != NULL) {
         error_code = session->method_handler(
@@ -249,11 +249,11 @@ bool nob_jsonrpc_handle_request(Nob_JSONRPC_Session *session) {
 
     if (error_code == NOB_JSONRPC_ERROR_CODE_NO_RESPONSE) return true;
 
-    if (success->sink == success_sink_saved) {
+    if (success->sink_count == success_sink_saved) {
         // Nothing added in success jim, hence setting result to null
         jim_null(success);
     }
-    if (failure->sink == failure_sink_saved) {
+    if (failure->sink_count == failure_sink_saved) {
         // Nothing added in failure jim, hence setting data to null
         jim_null(failure);
     }
