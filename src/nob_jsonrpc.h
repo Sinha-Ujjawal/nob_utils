@@ -93,10 +93,6 @@ void nob_free_jsonrpc_session(Nob_JSONRPC_Session *session);
 #include <unistd.h>
 
 bool nob_jsonrpc__parse_params(Nob_JSONRPC_Params_Parser parser, void *ctx, Nob_String_View method, Jimp *jimp) {
-    if (parser.params == NULL) {
-        nob_log(ERROR, "Parser has .params set to NULL, so nothing to pass to the parse_clb, therefore parsing must fail");
-        return false;
-    }
     assert(parser.parse_clb != NULL);
     return parser.parse_clb(ctx, method, jimp, parser.params);
 }
