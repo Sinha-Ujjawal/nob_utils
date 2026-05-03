@@ -32,6 +32,7 @@ Test_Case test_cases[] = {
     mk_test(test_nob_profile_da_vs_deque    , "src/nob_profiler.h", "src/nob_fa.h", "src/nob_deque.h"),
     mk_test(test_nob_profile_alloc_huge_page, "src/nob_profiler.h", "src/nob_fa.h", "src/nob_huge_page_alloc.h"),
     mk_test(test_nob_br                     , "src/nob_br.h"),
+    mk_test(test_nob_jsonrpc                , "src/nob_jsonrpc.h", "thirdparty/jim.h", "thirdparty/jimp.h"),
 };
 
 bool build(bool always_build) {

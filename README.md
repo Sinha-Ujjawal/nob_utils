@@ -41,6 +41,7 @@ See `test_` files in [`tests`](./tests/) directory to see few example usage of t
 | [`nob_rc.h`](./src/nob_rc.h) | A Simple Ref. Counting Allocator inspired from Tsoding Daily - [Reference Counting in C](https://youtu.be/iotrPxUnTdQ) | No Dependencies |
 | [`nob_huge_page_alloc.h`](./src/nob_huge_page_alloc.h) | A simple Huge Page Allocator using MMAP (in Linux and Macos), and VirtualAlloc for Windows | No Dependencies |
 | [`nob_br.h`](./src/nob_br.h) | A simple Buffered Reader implementation | Depends on [`nob.h`](./thirdparty/nob.h) for `String_Builder`, and `nob_log` |
+| [`nob_jsonrpc.h`](./src/nob_jsonrpc.h) | A simple [jsonrpc](https://www.jsonrpc.org/specification) implementation | Depends on [`nob.h`](./thirdparty/nob.h), [`jimp.h`](./thirdparty/jimp.h), [`jim.h`](./thirdparty/jim.h) and [`nob_br.h`](./src/nob_br.h) |
 
 **Note No Dependencies except libc :)**
 
