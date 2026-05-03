@@ -30,6 +30,7 @@ typedef struct {
 
 typedef enum {
     NOB_JSONRPC_ERROR_CODE_SUCCESS          = 0,
+    NOB_JSONRPC_ERROR_CODE_NO_RESPONSE      = 1,
     NOB_JSONRPC_ERROR_CODE_PARSE_ERROR      = -32700,
     NOB_JSONRPC_ERROR_CODE_INVALID_REQUEST  = -32600,
     NOB_JSONRPC_ERROR_CODE_METHOD_NOT_FOUND = -32601,
@@ -248,6 +249,8 @@ bool nob_jsonrpc_handle_request(Nob_JSONRPC_Session *session) {
             session->ctx, session->request_parser.method, session->params_parser.params, success, failure, &error_message);
     }
 
+    if (error_code == NOB_JSONRPC_ERROR_CODE_NO_RESPONSE) return true;
+
     if (success->sink == success_sink_saved) {
         // Nothing added in success jim, hence setting result to null
         jim_null(success);
@@ -330,6 +333,7 @@ void nob_free_jsonrpc_session(Nob_JSONRPC_Session *session) {
         #define create_jsonrpc_session               nob_create_jsonrpc_session
         #define jsonrpc_handle_request               nob_jsonrpc_handle_request
         #define JSONRPC_ERROR_CODE_SUCCESS           NOB_JSONRPC_ERROR_CODE_SUCCESS
+        #define JSONRPC_ERROR_CODE_NO_RESPONSE       NOB_JSONRPC_ERROR_CODE_NO_RESPONSE
         #define JSONRPC_ERROR_CODE_PARSE_ERROR       NOB_JSONRPC_ERROR_CODE_PARSE_ERROR
         #define JSONRPC_ERROR_CODE_INVALID_REQUEST   NOB_JSONRPC_ERROR_CODE_INVALID_REQUEST
         #define JSONRPC_ERROR_CODE_METHOD_NOT_FOUND  NOB_JSONRPC_ERROR_CODE_METHOD_NOT_FOUND

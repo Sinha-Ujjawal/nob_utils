@@ -12,6 +12,7 @@
 typedef enum {
     METHOD_INIT,
     METHOD_SUBTRACT,
+    METHOD_NOTIF,
 } Method_Type;
 
 typedef struct {
@@ -85,6 +86,9 @@ bool parse_params(void *ctx, String_View method, Jimp *jimp, void *ptr) {
             return false;
         }
        return true;
+    } else if (sv_starts_with(method, sv_from_cstr("notification"))) {
+        params->method_type = METHOD_NOTIF;
+        return true;
     }
     nob_log(ERROR, "Unknown Method: '"SV_Fmt"'", SV_Arg(method));
     return false;
@@ -109,6 +113,9 @@ JSONRPC_Error_Code method_handler(void *ctx, String_View method, void *ptr, Jim 
             jim_float(success, params->subtract_params.x - params->subtract_params.y);
             return JSONRPC_ERROR_CODE_SUCCESS;
         } break;
+        case METHOD_NOTIF: {
+            return JSONRPC_ERROR_CODE_NO_RESPONSE;
+        }
         default: {
             return JSONRPC_ERROR_CODE_METHOD_NOT_FOUND;
         }
