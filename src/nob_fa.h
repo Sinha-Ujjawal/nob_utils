@@ -54,6 +54,8 @@ struct {
 #define nob_fa_foreach(Type, it, fa) \
     for (Type *it = (fa)->items; it < (fa)->items + (fa)->count; ++it)
 
+#endif // NOB_FA_H_
+
 #ifndef NOB_FA_STRIP_PREFIX_GUARD_
 #define NOB_FA_STRIP_PREFIX_GUARD_
     #ifndef NOB_UNSTRIP_PREFIX
@@ -67,5 +69,3 @@ struct {
         #define embed_fa            nob_embed_fa
     #endif // NOB_UNSTRIP_PREFIX
 #endif // NOB_FA_STRIP_PREFIX_GUARD_
-
-#endif // NOB_FA_H_

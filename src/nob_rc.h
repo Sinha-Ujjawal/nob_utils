@@ -46,7 +46,11 @@ void nob_rc_print_stats(Nob_RC_Allocator allocator);
 // Returns the ref. count of the pointer
 size_t nob_rc_count(void *ptr);
 
+#endif // NOB_RC_H_
+
 #ifdef NOB_RC_IMPLEMENTATION
+#ifndef NOB_RC_IMPLEMENTATION_GAURD_
+#define NOB_RC_IMPLEMENTATION_GAURD_
 
 #include <assert.h>
 #include <stdlib.h>
@@ -134,6 +138,7 @@ size_t nob_rc_count(void *ptr) {
     return (size_t) rc->count;
 }
 
+#endif // NOB_RC_IMPLEMENTATION_GAURD_
 #endif // NOB_RC_IMPLEMENTATION
 
 #ifndef NOB_RC_STRIP_PREFIX_GUARD_
@@ -148,5 +153,3 @@ size_t nob_rc_count(void *ptr) {
         #define rc_count       nob_rc_count
     #endif // NOB_UNSTRIP_PREFIX
 #endif // NOB_RC_STRIP_PREFIX_GUARD_
-
-#endif // NOB_RC_H_

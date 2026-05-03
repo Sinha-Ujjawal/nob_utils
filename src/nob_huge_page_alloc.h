@@ -15,7 +15,11 @@ size_t nob_get_system_huge_page_size();
 bool nob_try_alloc_huge_page(Nob_Huge_Page_Buffer *buffer, size_t size);
 void nob_free_huge_page(Nob_Huge_Page_Buffer *buffer);
 
+#endif // NOB_HUGE_PAGE_ALLOC_H_
+
 #ifdef NOB_HUGE_PAGE_ALLOC_IMPLEMENTATION
+#ifndef NOB_HUGE_PAGE_ALLOC_IMPLEMENTATION_GAURD_
+#define NOB_HUGE_PAGE_ALLOC_IMPLEMENTATION_GAURD_
 
 // Includes
 #if defined(_WIN32)
@@ -94,6 +98,7 @@ void nob_free_huge_page(Nob_Huge_Page_Buffer *buffer) {
     memset(buffer, 0, sizeof(Nob_Huge_Page_Buffer));
 }
 
+#endif // NOB_HUGE_PAGE_ALLOC_IMPLEMENTATION_GAURD_
 #endif // NOB_HUGE_PAGE_ALLOC_IMPLEMENTATION
 
 #ifndef NOB_HUGE_PAGE_ALLOC_STRIP_PREFIX_GUARD_
@@ -105,5 +110,3 @@ void nob_free_huge_page(Nob_Huge_Page_Buffer *buffer) {
         #define free_huge_page            nob_free_huge_page
     #endif // NOB_UNSTRIP_PREFIX
 #endif // NOB_HUGE_PAGE_ALLOC_STRIP_PREFIX_GUARD_
-
-#endif // NOB_HUGE_PAGE_ALLOC_H_

@@ -168,6 +168,8 @@ struct {
     for (type *it = (ht)->items; it < (ht)->items + (ht)->capacity; ++it) \
         if (it->is_occupied)
 
+#endif // NOB_HT_H_
+
 #ifndef NOB_HT_STRIP_PREFIX_GUARD_
 #define NOB_HT_STRIP_PREFIX_GUARD_
     #ifndef NOB_UNSTRIP_PREFIX
@@ -185,5 +187,3 @@ struct {
         #define embed_ht_with_kv   nob_embed_ht_with_kv
     #endif // NOB_UNSTRIP_PREFIX
 #endif // NOB_HT_STRIP_PREFIX_GUARD_
-
-#endif // NOB_HT_H_

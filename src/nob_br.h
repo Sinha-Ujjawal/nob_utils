@@ -30,7 +30,11 @@ bool nob_br_read_while_to_sb(Nob_Buffered_Reader *reader, int (*predicate)(int c
 bool nob_br_read_line(Nob_Buffered_Reader *reader, void (*clb)(void *ctx, char b), void *ctx);
 bool nob_br_read_line_to_sb(Nob_Buffered_Reader *reader, Nob_String_Builder *sb);
 
+#endif // NOB_BR_H_
+
 #ifdef NOB_BR_IMPLEMENTATION
+#ifndef NOB_BR_IMPLEMENTATION_GAURD_
+#define NOB_BR_IMPLEMENTATION_GAURD_
 
 #ifdef _WIN32
     #define WIN32_LEAN_AND_MEAN
@@ -160,6 +164,7 @@ bool nob_br_read_line_to_sb(Nob_Buffered_Reader *reader, Nob_String_Builder *sb)
     return true;
 }
 
+#endif // NOB_BR_IMPLEMENTATION_GAURD_
 #endif // NOB_BR_IMPLEMENTATION
 
 #ifndef NOB_BR_STRIP_PREFIX_GUARD_
@@ -174,5 +179,3 @@ bool nob_br_read_line_to_sb(Nob_Buffered_Reader *reader, Nob_String_Builder *sb)
         #define br_read_line_to_sb  nob_br_read_line_to_sb
     #endif // NOB_UNSTRIP_PREFIX
 #endif // NOB_BR_STRIP_PREFIX_GUARD_
-
-#endif // NOB_BR_H_

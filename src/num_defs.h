@@ -1,3 +1,6 @@
+#ifndef NUM_DEFS_H_
+#define NUM_DEFS_H_
+
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
@@ -47,3 +50,5 @@ typedef _Atomic u64 au64;
 #define KILOBYTES(val) ((val) * 1024ULL)
 #define MEGABYTES(val) (KILOBYTES(val) * 1024ULL)
 #define GIGABYTES(val) (MEGABYTES(val) * 1024ULL)
+
+#endif // NUM_DEFS_H_

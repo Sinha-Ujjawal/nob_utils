@@ -8,6 +8,19 @@
         size_t capacity; \
     }
 
+// Thirdparty
+#ifndef NOB_H_
+#include "nob.h"
+#endif // NOB_H_
+
+#ifndef JIM_H_
+#include "jim.h"
+#endif // JIM_H_
+
+#ifndef JIMP_H_
+#include "jimp.h"
+#endif // JIMP_H_
+
 #include "nob_fa.h"
 #include "nob_heapq.h"
 #include "nob_deque.h"

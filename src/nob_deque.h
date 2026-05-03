@@ -154,6 +154,8 @@ struct {
     for (size_t i = 0 ; i < (dq)->count; i++) \
         for (type *it = &(dq)->items[((dq)->begin + i) & ((dq)->capacity - 1)]; it != NULL; it = NULL)
 
+#endif // NOB_DEQUE_H_
+
 #ifndef NOB_DEQUE_STRIP_PREFIX_GUARD_
 #define NOB_DEQUE_STRIP_PREFIX_GUARD_
     #ifndef NOB_UNSTRIP_PREFIX
@@ -168,5 +170,3 @@ struct {
         #define embed_deque    nob_embed_deque
     #endif // NOB_UNSTRIP_PREFIX
 #endif // NOB_DEQUE_STRIP_PREFIX_GUARD_
-
-#endif // NOB_DEQUE_H_

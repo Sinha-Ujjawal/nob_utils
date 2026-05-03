@@ -65,7 +65,11 @@ bool nob_graph_is_cyclic(
     Nob_Graph_Hash_Node_Fn hash_fn,
     Nob_Graph_Is_Node_Eql_Fn is_eql_fn);
 
+#endif // NOB_GRAPH_H_
+
 #ifdef NOB_GRAPH_IMPLEMENTATION
+#ifndef NOB_GRAPH_IMPLEMENTATION_GAURD_
+#define NOB_GRAPH_IMPLEMENTATION_GAURD_
 
 void nob_graph_bfs(
     void *ctx,
@@ -321,7 +325,9 @@ bool nob_graph_is_cyclic(
     );
 }
 
+#endif // NOB_GRAPH_IMPLEMENTATION_GAURD_
 #endif // NOB_GRAPH_IMPLEMENTATION
+
 #ifndef NOB_GRAPH_STRIP_PREFIX_GUARD_
 #define NOB_GRAPH_STRIP_PREFIX_GUARD_
     #ifndef NOB_UNSTRIP_PREFIX
@@ -340,4 +346,3 @@ bool nob_graph_is_cyclic(
         #define graph_is_cyclic      nob_graph_is_cyclic
     #endif // NOB_UNSTRIP_PREFIX
 #endif // NOB_GRAPH_STRIP_PREFIX_GUARD_
-#endif // NOB_GRAPH_H_

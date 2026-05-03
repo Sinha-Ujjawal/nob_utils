@@ -144,7 +144,12 @@ void nob__ilist_iterator_update(Nob__Ilist_Iterator *it, size_t newIdx);
          nob__ilist_iterator_update(&_nob_ilist_foreach_iterator, (*ilist)[_nob_ilist_foreach_iterator.i].nextSibling))                                               \
         for (type *it = &(*ilist)[_nob_ilist_foreach_iterator.i]; it != NULL; it = NULL)
 
+#endif // NOB_ILIST_H_
+
 #ifdef NOB_ILIST_IMPLEMENTATION
+#ifndef NOB_ILIST_IMPLEMENTATION_GAURD_
+#define NOB_ILIST_IMPLEMENTATION_GAURD_
+
 Nob__Ilist_Iterator nob__ilist_iterator(size_t idx) {
     return (Nob__Ilist_Iterator){.i=(size_t) (idx), .isFirst=true};
 }
@@ -154,6 +159,7 @@ void nob__ilist_iterator_update(Nob__Ilist_Iterator *it, size_t newIdx) {
     it->isFirst = false;
 }
 
+#endif // NOB_ILIST_IMPLEMENTATION_GAURD_
 #endif // NOB_ILIST_IMPLEMENTATION
 
 #ifndef NOB_ILIST_STRIP_PREFIX_GUARD_
@@ -169,5 +175,3 @@ void nob__ilist_iterator_update(Nob__Ilist_Iterator *it, size_t newIdx) {
         #define embed_ilist_node nob_embed_ilist_node
     #endif // NOB_UNSTRIP_PREFIX
 #endif // NOB_ILIST_STRIP_PREFIX_GUARD_
-
-#endif // NOB_ILIST_H_

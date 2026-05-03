@@ -114,6 +114,8 @@
     } while(0);
 #define nob_heappoppush nob_heapreplace
 
+#endif // NOB_HEAPQ_H_
+
 #ifndef NOB_HEAPQ_STRIP_PREFIX_GUARD_
 #define NOB_HEAPQ_STRIP_PREFIX_GUARD_
     #ifndef NOB_UNSTRIP_PREFIX
@@ -131,5 +133,3 @@
         #define heappoppush  nob_heappoppush
     #endif // NOB_UNSTRIP_PREFIX
 #endif // NOB_HEAPQ_STRIP_PREFIX_GUARD_
-
-#endif // NOB_HEAPQ_H_

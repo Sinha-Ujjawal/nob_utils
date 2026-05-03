@@ -25,7 +25,12 @@ size_t nob_mix_hash_many(const size_t *hs, size_t hs_count, size_t seed);
         return nob_mix_hash(hash_fn(x), seed);             \
     }
 
+#endif // NOB_HASH_H_
+
 #ifdef NOB_HASH_IMPLEMENTATION
+#ifndef NOB_HASH_IMPLEMENTATION_GAURD_
+#define NOB_HASH_IMPLEMENTATION_GAURD_
+
 #include <stdint.h>
 #include <string.h>
 
@@ -92,6 +97,7 @@ size_t nob_mix_hash_many(const size_t *hs, size_t hs_count, size_t seed) {
     return h;
 }
 
+#endif // NOB_HASH_IMPLEMENTATION_GAURD_
 #endif // NOB_HASH_IMPLEMENTATION
 
 #ifndef NOB_HASH_STRIP_PREFIX_GUARD_
@@ -113,5 +119,3 @@ size_t nob_mix_hash_many(const size_t *hs, size_t hs_count, size_t seed) {
         #define HASH_DEFAULT_MIX    NOB_HASH_DEFAULT_MIX
     #endif // NOB_UNSTRIP_PREFIX
 #endif // NOB_HASH_STRIP_PREFIX_GUARD_
-
-#endif // NOB_HASH_H_
