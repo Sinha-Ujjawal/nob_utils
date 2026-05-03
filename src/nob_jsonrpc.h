@@ -25,28 +25,8 @@ typedef struct {
 
 typedef struct {
     void *params;
-    bool(*parse_clb)(Nob_String_View method, Jimp *jimp, void *params);
+    bool(*parse_clb)(void *ctx, Nob_String_View method, Jimp *jimp, void *params);
 } Nob_JSONRPC_Params_Parser;
-
-typedef struct {
-    // Where to read Request
-    int fdin;
-    const char *fdin_label;
-
-    // Where to write Response
-    int fdout;
-    const char *fdout_label;
-
-    // For Reading and Parsing Request
-    Nob_JSONRPC_Request_Parser request_parser;
-    Nob_JSONRPC_Params_Parser params_parser;
-    Nob_Buffered_Reader buff;
-    Nob_String_Builder sb;
-
-    // For Generating JSON Response
-    Jim success;
-    Jim failure;
-} Nob_JSONRPC_Session;
 
 typedef enum {
     NOB_JSONRPC_ERROR_CODE_SUCCESS          = 0,
@@ -59,13 +39,47 @@ typedef enum {
     NOB_JSONRPC_ERROR_CODE_SERVER_ERROR_MAX = -32000,
 } Nob_JSONRPC_Error_Code;
 
-typedef Nob_JSONRPC_Error_Code(*Nob_JSONRPC_Method_Handler)(Nob_String_View method, void *params, Jim *success, Jim *failure, char **error_message);
+typedef Nob_JSONRPC_Error_Code(*Nob_JSONRPC_Method_Handler)(void *ctx, Nob_String_View method, void *params, Jim *success, Jim *failure, char **error_message);
 
-bool nob_jsonrpc_parse_request(Nob_JSONRPC_Request_Parser *parser, const char *label, const char *data, size_t count, Nob_JSONRPC_Params_Parser params_parser);
+typedef struct {
+    // Where to read Request
+    int fdin;
+    const char *fdin_label;
+
+    // Where to write Response
+    int fdout;
+    const char *fdout_label;
+
+    void *ctx;
+
+    // For Reading and Parsing Request
+    Nob_JSONRPC_Request_Parser request_parser;
+    Nob_JSONRPC_Params_Parser params_parser;
+    Nob_Buffered_Reader buff;
+    Nob_String_Builder sb;
+
+    // Method handler
+    Nob_JSONRPC_Method_Handler method_handler;
+
+    // For Generating JSON Response
+    Jim success;
+    Jim failure;
+} Nob_JSONRPC_Session;
+
+bool nob_jsonrpc_parse_request(
+    Nob_JSONRPC_Request_Parser *parser,
+    const char *label, const char *data, size_t count,
+    Nob_JSONRPC_Params_Parser params_parser,
+    void *ctx);
 void nob_free_jsonrpc_request_parser(Nob_JSONRPC_Request_Parser *parser);
 
-Nob_JSONRPC_Session nob_create_jsonrpc_session(int fdin, const char *fdin_label, int fdout, const char *fdout_label, Nob_JSONRPC_Params_Parser params_parser);
-bool nob_jsonrpc_handle_request(Nob_JSONRPC_Session *session, Nob_JSONRPC_Method_Handler method_handler);
+Nob_JSONRPC_Session nob_create_jsonrpc_session(
+    int fdin, const char *fdin_label,
+    int fdout, const char *fdout_label,
+    Nob_JSONRPC_Params_Parser params_parser,
+    Nob_JSONRPC_Method_Handler method_handler,
+    void *ctx);
+bool nob_jsonrpc_handle_request(Nob_JSONRPC_Session *session);
 void nob_free_jsonrpc_session(Nob_JSONRPC_Session *session);
 
 #endif // NOB_JSONRPC_H_
@@ -77,16 +91,20 @@ void nob_free_jsonrpc_session(Nob_JSONRPC_Session *session);
 #include <string.h>
 #include <unistd.h>
 
-bool nob_jsonrpc__parse_params(Nob_JSONRPC_Params_Parser parser, Nob_String_View method, Jimp *jimp) {
+bool nob_jsonrpc__parse_params(Nob_JSONRPC_Params_Parser parser, void *ctx, Nob_String_View method, Jimp *jimp) {
     if (parser.params == NULL) {
         nob_log(ERROR, "Parser has .params set to NULL, so nothing to pass to the parse_clb, therefore parsing must fail");
         return false;
     }
     assert(parser.parse_clb != NULL);
-    return parser.parse_clb(method, jimp, parser.params);
+    return parser.parse_clb(ctx, method, jimp, parser.params);
 }
 
-bool nob_jsonrpc_parse_request(Nob_JSONRPC_Request_Parser *parser, const char *label, const char *data, size_t count, Nob_JSONRPC_Params_Parser params_parser) {
+bool nob_jsonrpc_parse_request(
+    Nob_JSONRPC_Request_Parser *parser,
+    const char *label, const char *data, size_t count,
+    Nob_JSONRPC_Params_Parser params_parser,
+    void *ctx) {
     // Reset
     parser->id = 0;
     parser->is_id_parsed = false;
@@ -132,7 +150,7 @@ bool nob_jsonrpc_parse_request(Nob_JSONRPC_Request_Parser *parser, const char *l
     }
     if (params_parser.parse_clb != NULL && params.data != NULL) {
         jimp_begin(jimp, label, params.data, params.count);
-        if (!nob_jsonrpc__parse_params(params_parser, parser->method, jimp)) {
+        if (!nob_jsonrpc__parse_params(params_parser, ctx, parser->method, jimp)) {
             nob_log(ERROR, "%s:0: Unable to parse the params", label);
             return false;
         }
@@ -147,8 +165,15 @@ void nob_free_jsonrpc_request_parser(Nob_JSONRPC_Request_Parser *parser) {
     memset(parser, 0, sizeof(Nob_JSONRPC_Request_Parser));
 }
 
-Nob_JSONRPC_Session nob_create_jsonrpc_session(int fdin, const char *fdin_label, int fdout, const char *fdout_label, Nob_JSONRPC_Params_Parser params_parser) {
+Nob_JSONRPC_Session nob_create_jsonrpc_session(
+    int fdin, const char *fdin_label,
+    int fdout, const char *fdout_label,
+    Nob_JSONRPC_Params_Parser params_parser,
+    Nob_JSONRPC_Method_Handler method_handler,
+    void *ctx) {
     Nob_JSONRPC_Session session = {0};
+
+    session.ctx = ctx;
 
     // Where to read Request
     session.fdin = fdin;
@@ -160,6 +185,8 @@ Nob_JSONRPC_Session nob_create_jsonrpc_session(int fdin, const char *fdin_label,
 
     session.params_parser = params_parser;
     session.buff = nob_create_br(fdin);
+
+    session.method_handler = method_handler;
 
     return session;
 }
@@ -188,7 +215,7 @@ void nob_jsonrpc__object_begin_with_jsonrpc_ver_and_id(Jim *jim, Nob_JSONRPC_Req
     }
 }
 
-bool nob_jsonrpc_handle_request(Nob_JSONRPC_Session *session, Nob_JSONRPC_Method_Handler method_handler) {
+bool nob_jsonrpc_handle_request(Nob_JSONRPC_Session *session) {
     char *error_message = NULL;
     Nob_JSONRPC_Error_Code error_code = NOB_JSONRPC_ERROR_CODE_SUCCESS;
 
@@ -196,7 +223,7 @@ bool nob_jsonrpc_handle_request(Nob_JSONRPC_Session *session, Nob_JSONRPC_Method
     while (session->sb.count == 0) { // Busy loop to look for new line
         if (!nob_br_read_line_to_sb(&session->buff, &session->sb)) return false;
     }
-    if (!nob_jsonrpc_parse_request(&session->request_parser, session->fdin_label, session->sb.items, session->sb.count, session->params_parser)) {
+    if (!nob_jsonrpc_parse_request(&session->request_parser, session->fdin_label, session->sb.items, session->sb.count, session->params_parser, session->ctx)) {
         error_code = NOB_JSONRPC_ERROR_CODE_PARSE_ERROR;
     }
 
@@ -216,9 +243,9 @@ bool nob_jsonrpc_handle_request(Nob_JSONRPC_Session *session, Nob_JSONRPC_Method
             jim_member_key(failure, "data");
     const char *failure_sink_saved = failure->sink;
 
-    if (error_code == NOB_JSONRPC_ERROR_CODE_SUCCESS && method_handler != NULL) {
-        error_code = method_handler(
-            session->request_parser.method, session->params_parser.params, success, failure, &error_message);
+    if (error_code == NOB_JSONRPC_ERROR_CODE_SUCCESS && session->method_handler != NULL) {
+        error_code = session->method_handler(
+            session->ctx, session->request_parser.method, session->params_parser.params, success, failure, &error_message);
     }
 
     if (success->sink == success_sink_saved) {

@@ -29,7 +29,8 @@ typedef struct {
     };
 } Params;
 
-bool parse_params(String_View method, Jimp *jimp, void *ptr) {
+bool parse_params(void *ctx, String_View method, Jimp *jimp, void *ptr) {
+    UNUSED(ctx);
     nob_log(INFO, "ptr in parse_params: %p", ptr);
     Params *params = ptr;
     if (sv_eq(method, sv_from_cstr("initialize"))) {
@@ -89,7 +90,8 @@ bool parse_params(String_View method, Jimp *jimp, void *ptr) {
     return false;
 }
 
-JSONRPC_Error_Code method_handler(String_View method, void *ptr, Jim *success, Jim *failure, char **error_message) {
+JSONRPC_Error_Code method_handler(void *ctx, String_View method, void *ptr, Jim *success, Jim *failure, char **error_message) {
+    UNUSED(ctx);
     UNUSED(method);
     UNUSED(failure);
     UNUSED(error_message);
@@ -131,7 +133,7 @@ int main(void) {
     JSONRPC_Request_Parser parser = {0};
     Params params = {0};
     JSONRPC_Params_Parser params_parser = {.params=&params, .parse_clb=parse_params};
-    if (!jsonrpc_parse_request(&parser, "sample_data", sample_data, ARRAY_LEN(sample_data), params_parser)) return_defer(false);
+    if (!jsonrpc_parse_request(&parser, "sample_data", sample_data, ARRAY_LEN(sample_data), params_parser, NULL)) return_defer(false);
     nob_log(INFO, "Parsed Request:");
     nob_log(INFO, "JSONRPC Ver: '%s'", parser.jsonrpc_ver);
     if (parser.is_id_parsed) {
@@ -149,9 +151,9 @@ int main(void) {
         }
     }
 
-    JSONRPC_Session session = create_jsonrpc_session(STDIN_FILENO, "stdin", STDOUT_FILENO, "stdout", params_parser);
+    JSONRPC_Session session = create_jsonrpc_session(STDIN_FILENO, "stdin", STDOUT_FILENO, "stdout", params_parser, method_handler, NULL);
     for (;;) {
-        if (!jsonrpc_handle_request(&session, method_handler)) return_defer(false);
+        if (!jsonrpc_handle_request(&session)) return_defer(false);
     }
 
     result = 0;
