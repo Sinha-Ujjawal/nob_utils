@@ -190,6 +190,7 @@ Nob_JSONRPC_Session nob_create_jsonrpc_session(
 
 bool nob_jsonrpc__write_line(int fdout, const char *fdout_label, const char *message, size_t length) {
     bool result = false;
+    nob_log(INFO, "Writing line to fdout(%s): |"SV_Fmt"|", fdout_label, (int) length, message);
     if (write(fdout, message, length) < 0) return_defer(false);
     if (write(fdout, "\n", 1) < 0) return_defer(false);
     result = true;
@@ -220,6 +221,7 @@ bool nob_jsonrpc_handle_request(Nob_JSONRPC_Session *session) {
     while (session->sb.count == 0) { // Busy loop to look for new line
         if (!nob_br_read_line_to_sb(&session->buff, &session->sb)) return false;
     }
+    nob_log(INFO, "Read line from fdin(%s): |"SV_Fmt"|", session->fdin_label, (int) session->sb.count, session->sb.items);
     if (!nob_jsonrpc_parse_request(&session->request_parser, session->fdin_label, session->sb.items, session->sb.count, session->params_parser, session->ctx)) {
         error_code = NOB_JSONRPC_ERROR_CODE_PARSE_ERROR;
     }
