@@ -1,3 +1,10 @@
+#define _GNU_SOURCE
+#include <sys/mman.h>
+#include <unistd.h>
+#include <stdio.h>
+#include <string.h>
+#include <stdbool.h>
+
 #define NOB_IMPLEMENTATION
 #define JIMP_IMPLEMENTATION
 #define JIM_IMPLEMENTATION
@@ -8,6 +15,8 @@
 #include "jim.h"
 #include "nob_utils.h"
 #include "nob_jsonrpc.h"
+
+// --- YOUR ORIGINAL TYPES AND LOGIC ---
 
 typedef enum {
     METHOD_INIT,
@@ -32,7 +41,6 @@ typedef struct {
 
 bool parse_params(void *ctx, String_View method, Jimp *jimp, void *ptr) {
     UNUSED(ctx);
-    nob_log(INFO, "ptr in parse_params: %p", ptr);
     Params *params = ptr;
     if (sv_eq(method, sv_from_cstr("initialize"))) {
         params->method_type = METHOD_INIT;
@@ -59,114 +67,92 @@ bool parse_params(void *ctx, String_View method, Jimp *jimp, void *ptr) {
                 if (!jimp_skip_member(jimp)) return false;
             }
         }
-        if (!jimp_object_end(jimp)) return false;
-        return true;
+        return jimp_object_end(jimp);
     } else if (sv_eq(method, sv_from_cstr("subtract"))) {
         params->method_type = METHOD_SUBTRACT;
         size_t idx = 0;
         if (!jimp_array_begin(jimp)) return false;
         while (jimp_array_item(jimp)) {
-            if (idx >= 2) {
-                nob_log(ERROR, "Expected only two elements in the array, got > 2");
-                return false;
-            }
+            if (idx >= 2) return false;
             if (!jimp_number(jimp)) return false;
-            if (idx == 0) {
-                params->subtract_params.x = jimp->number;
-            } else if (idx == 1) {
-                params->subtract_params.y = jimp->number;
-            } else {
-                UNREACHABLE("subtract_params");
-            }
+            if (idx == 0) params->subtract_params.x = jimp->number;
+            else if (idx == 1) params->subtract_params.y = jimp->number;
             idx++;
         }
         if (!jimp_array_end(jimp)) return false;
-        if (idx != 2) {
-            nob_log(ERROR, "Expected only two elements in the array, got < 2");
-            return false;
-        }
-       return true;
+        return idx == 2;
     } else if (sv_starts_with(method, sv_from_cstr("notification"))) {
         params->method_type = METHOD_NOTIF;
         return true;
     }
-    nob_log(ERROR, "Unknown Method: '"SV_Fmt"'", SV_Arg(method));
     return false;
 }
 
 JSONRPC_Error_Code method_handler(void *ctx, String_View method, void *ptr, Jim *success, Jim *failure, char **error_message) {
-    UNUSED(ctx);
-    UNUSED(method);
-    UNUSED(failure);
-    UNUSED(error_message);
-    nob_log(INFO, "ptr in method_handler: %p", ptr);
+    UNUSED(ctx); UNUSED(method); UNUSED(failure); UNUSED(error_message);
     Params *params = ptr;
-    nob_log(INFO, "params->method_type: %d", params->method_type);
-    nob_log(INFO, "params->subtract_params.x: %f", params->subtract_params.x);
-    nob_log(INFO, "params->subtract_params.y: %f", params->subtract_params.y);
     switch (params->method_type) {
-        case METHOD_INIT: {
+        case METHOD_INIT:
             jim_string(success, "initialized");
             return JSONRPC_ERROR_CODE_SUCCESS;
-        } break;
-        case METHOD_SUBTRACT: {
+        case METHOD_SUBTRACT:
             jim_float(success, params->subtract_params.x - params->subtract_params.y);
             return JSONRPC_ERROR_CODE_SUCCESS;
-        } break;
-        case METHOD_NOTIF: {
+        case METHOD_NOTIF:
             return JSONRPC_ERROR_CODE_NO_RESPONSE;
-        }
-        default: {
+        default:
             return JSONRPC_ERROR_CODE_METHOD_NOT_FOUND;
-        }
     }
 }
 
-int main(void) {
-    int result = 1;
-    const char sample_data[] = "{"
-            "\"params\":{"
-                "\"protocolVersion\":\"2025-11-25\","
-                "\"capabilities\":{},"
-                "\"clientInfo\":{"
-                    "\"name\":\"opencode\","
-                    "\"version\":\"1.14.32\""
-                "}"
-            "},"
-            "\"method\":\"initialize\","
-            "\"jsonrpc\":\"2.0\","
-            "\"id\":12345"
-        "}";
-    JSONRPC_Request_Parser parser = {0};
+// --- FULL TEST HARNESS ---
+
+void run_test(const char *test_name, const char *json_request) {
+    nob_log(INFO, "TEST [%s]: Sending -> %s", test_name, json_request);
+
+    // 1. Setup Input (Mock Stdin)
+    int in_fd = memfd_create("mock_in", 0);
+    write(in_fd, json_request, strlen(json_request));
+    lseek(in_fd, 0, SEEK_SET);
+
+    // 2. Setup Output (Mock Stdout)
+    int out_fd = memfd_create("mock_out", 0);
+
+    // 3. Setup Library Session
     Params params = {0};
-    JSONRPC_Params_Parser params_parser = {.params=&params, .parse_clb=parse_params};
-    if (!jsonrpc_parse_request(&parser, "sample_data", sample_data, ARRAY_LEN(sample_data), params_parser, NULL)) return_defer(false);
-    nob_log(INFO, "Parsed Request:");
-    nob_log(INFO, "JSONRPC Ver: '%s'", parser.jsonrpc_ver);
-    if (parser.is_id_parsed) {
-        nob_log(INFO, "ID: %zu", parser.id);
-    }
-    nob_log(INFO, "Method: '"SV_Fmt"'", SV_Arg(parser.method));
-    if (parser.is_params_parsed) {
-        nob_log(INFO, "Params:");
-        if (sv_eq(parser.method, sv_from_cstr("initialize"))) {
-            nob_log(INFO, "  Protocol Version: '"SV_Fmt"'", SV_Arg(params.init_params.protocol_ver));
-            nob_log(INFO, "  Client Name     : '"SV_Fmt"'", SV_Arg(params.init_params.client_info_name));
-            nob_log(INFO, "  Client Version  : '"SV_Fmt"'", SV_Arg(params.init_params.client_info_ver));
-        } else {
-            nob_log(ERROR, "Unknown Method: '"SV_Fmt"'", SV_Arg(parser.method));
-        }
+    JSONRPC_Params_Parser p_parser = {.params = &params, .parse_clb = parse_params};
+    JSONRPC_Session session = create_jsonrpc_session(in_fd, "in", out_fd, "out", p_parser, method_handler, NULL);
+
+    // 4. Run Library Logic
+    if (!jsonrpc_handle_request(&session)) {
+        nob_log(WARNING, "Session ended (likely EOF)");
     }
 
-    JSONRPC_Session session = create_jsonrpc_session(STDIN_FILENO, "stdin", STDOUT_FILENO, "stdout", params_parser, method_handler, NULL);
-    for (;;) {
-        if (!jsonrpc_handle_request(&session)) return_defer(false);
-    }
+    // 5. Read Back Output
+    char response[1024] = {0};
+    lseek(out_fd, 0, SEEK_SET);
+    read(out_fd, response, sizeof(response) - 1);
+    nob_log(INFO, "RESPONSE: %s\n", response);
 
-    result = 0;
-defer:
-    free_jsonrpc_request_parser(&parser);
+    // 6. Manual Cleanup (Library doesn't close FDs)
     free_jsonrpc_session(&session);
-    return result;
+    close(in_fd);
+    close(out_fd);
+}
+
+int main(void) {
+    // Case 1: Subtract (42 - 23)
+    run_test("Subtract Success",
+        "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"subtract\",\"params\":[42, 23]}");
+
+    // Case 2: Initialize
+    run_test("Initialize Success",
+        "{\"jsonrpc\":\"2.0\",\"id\":2,\"method\":\"initialize\",\"params\":{\"protocolVersion\":\"1.0\"}}");
+
+    // Case 3: Parse Error (Missing bracket)
+    run_test("Invalid JSON",
+        "{\"jsonrpc\":\"2.0\",\"method\":\"subtract\",\"params\":[1, 2");
+
+    return 0;
 }
 

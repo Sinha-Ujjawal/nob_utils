@@ -42,6 +42,7 @@ See `test_` files in [`tests`](./tests/) directory to see few example usage of t
 | [`nob_huge_page_alloc.h`](./src/nob_huge_page_alloc.h) | A simple Huge Page Allocator using MMAP (in Linux and Macos), and VirtualAlloc for Windows | No Dependencies |
 | [`nob_br.h`](./src/nob_br.h) | A simple Buffered Reader implementation | Depends on [`nob.h`](./thirdparty/nob.h) for `String_Builder`, and `nob_log` |
 | [`nob_jsonrpc.h`](./src/nob_jsonrpc.h) | A simple [jsonrpc](https://www.jsonrpc.org/specification) implementation | Depends on [`nob.h`](./thirdparty/nob.h), [`jimp.h`](./thirdparty/jimp.h), [`jim.h`](./thirdparty/jim.h) and [`nob_br.h`](./src/nob_br.h) |
+| [`nob_mcp.h`](./src/nob_mcp.h) | A simple [MCP Server](https://en.wikipedia.org/wiki/Model_Context_Protocol) which implements tools/list and tools/call to be useful for creating MCP servers | Depends on [`nob.h`](./thirdparty/nob.h), [`jimp.h`](./thirdparty/jimp.h), [`jim.h`](./thirdparty/jim.h), [`nob_br.h`](./src/nob_br.h) and [`nob_jsonrpc.h`](src/nob_jsonrpc.h) |
 
 **Note No Dependencies except libc :)**
 

@@ -33,6 +33,7 @@
 #include "nob_huge_page_alloc.h"
 #include "nob_br.h"
 #include "nob_jsonrpc.h"
+#include "nob_mcp.h"
 #include "num_defs.h"
 
 #ifndef NOB_UTILS_STRIP_PREFIX_GUARD_
