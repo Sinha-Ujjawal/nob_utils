@@ -37,6 +37,7 @@ struct Nob_MCP_Session {
     const char *mcp_server_name;
     const char *mcp_server_ver;
     void *ctx;
+    const char *instructions;
 
     bool (*tools_list_clb)(Nob_MCP_Session *session); // tools/list callback
     Nob_MCP_Tools_List_Scopes tools_list_scopes;
@@ -97,7 +98,8 @@ Nob_MCP_Session nob_create_mcp_session(
     const char *mcp_server_name, const char *mcp_server_ver,
     bool (*tools_list_clb)(Nob_MCP_Session *session), // tools/list callback
     bool (*tools_call_clb)(Nob_MCP_Session *session, Nob_String_View tool_name, Jimp *tool_args), // tools/call callback
-    void *ctx);
+    void *ctx,
+    const char *instructions);
 void nob_free_mcp_session(Nob_MCP_Session *session);
 bool nob_mcp_handle_request(Nob_MCP_Session *session);
 
@@ -210,6 +212,12 @@ Nob_JSONRPC_Error_Code nob_mcp__method_handler(void *mcp_session_ptr, Nob_String
                 jim_member_key(success, "version");
                 jim_string(success, mcp_session->mcp_server_ver);
             } jim_object_end(success);
+
+            // instructions
+            if (mcp_session->instructions != NULL) {
+                jim_member_key(success, "instructions");
+                jim_string(success, mcp_session->instructions);
+            }
         } jim_object_end(success);
         return NOB_JSONRPC_ERROR_CODE_SUCCESS;
     } else if (nob_sv_starts_with(method, sv_from_cstr("notification"))) { // No response in case of notification
@@ -252,7 +260,8 @@ Nob_MCP_Session nob_create_mcp_session(
     const char *mcp_server_name, const char *mcp_server_ver,
     bool (*tools_list_clb)(Nob_MCP_Session *session), // tools/list callback
     bool (*tools_call_clb)(Nob_MCP_Session *session, Nob_String_View tool_name, Jimp *tool_args), // tools/call callback
-    void *ctx) {
+    void *ctx,
+    const char *instructions) {
     Nob_MCP_Session session = {0};
 
     Nob_JSONRPC_Params_Parser params_parser = {.params=NULL, .parse_clb=nob_mcp__params_parser};
@@ -268,6 +277,7 @@ Nob_MCP_Session nob_create_mcp_session(
     session.tools_list_clb = tools_list_clb;
     session.tools_call_clb = tools_call_clb;
     session.ctx = ctx;
+    session.instructions = instructions;
     return session;
 }
 
