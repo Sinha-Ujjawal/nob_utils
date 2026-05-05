@@ -23,6 +23,7 @@ Test_Case test_cases[] = {
     mk_test(test_nob_fa                     , "src/nob_fa.h"),
     mk_test(test_nob_heapq                  , "src/nob_heapq.h"),
     mk_test(test_nob_deque                  , "src/nob_deque.h"),
+    mk_test(test_nob_fixed_deque            , "src/nob_fixed_deque.h"),
     mk_test(test_nob_hash                   , "src/nob_hash.h"),
     mk_test(test_nob_ht                     , "src/nob_ht.h", "src/nob_hash.h"),
     mk_test(test_nob_ilist                  , "src/nob_ilist.h"),

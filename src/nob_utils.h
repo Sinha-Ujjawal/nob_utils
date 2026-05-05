@@ -24,6 +24,7 @@
 #include "nob_fa.h"
 #include "nob_heapq.h"
 #include "nob_deque.h"
+#include "nob_fixed_deque.h"
 #include "nob_hash.h"
 #include "nob_ht.h"
 #include "nob_ilist.h"
