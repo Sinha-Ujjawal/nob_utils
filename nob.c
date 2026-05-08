@@ -35,6 +35,8 @@ Test_Case test_cases[] = {
     mk_test(test_nob_br                     , "src/nob_br.h"),
     mk_test(test_nob_jsonrpc                , "src/nob_jsonrpc.h", "thirdparty/jim.h", "thirdparty/jimp.h"),
     mk_test(test_nob_mcp                    , "src/nob_mcp.h", "src/nob_jsonrpc.h", "thirdparty/jim.h", "thirdparty/jimp.h"),
+    mk_test(test_nob_channels               , "src/nob_channels.h", "src/nob_deque.h", "src/nob_fixed_deque.h"),
+    mk_test(test_nob_channels2              , "src/nob_channels.h", "src/nob_deque.h", "src/nob_fixed_deque.h"),
 };
 
 bool build(bool always_build) {
