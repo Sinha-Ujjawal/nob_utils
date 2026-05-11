@@ -1,173 +1,377 @@
 #define NOB_IMPLEMENTATION
 #define NOB_BR_IMPLEMENTATION
 #include "nob.h"
-#include "nob_br.h"
-#include "nob_deque.h"
 #include "nob_fixed_deque.h"
 #include "nob_channels.h"
+
 #include <stdio.h>
 #include <unistd.h>
-#include <time.h>
+#include <stdatomic.h>
+#include <assert.h>
 
-typedef char* String;
+// ============================================================
+// Helpers
+// ============================================================
 
-// Channel definitions
-typedef embed_channel(String, 64) String_Chan;
+#define TEST(name) do { fprintf(stderr, "[ RUN ] %s\n", name); } while(0)
+#define PASS(name) do { fprintf(stderr, "[ OK  ] %s\n", name); } while(0)
+#define FAIL(name, msg) do { fprintf(stderr, "[FAIL ] %s: %s\n", name, msg); abort(); } while(0)
 
-// A unit-type channel used purely as a signal (the String value is ignored).
-// channel_alt lets us wait on both out_chan and quit_chan simultaneously,
-// so the writer can unblock and exit without closing out_chan prematurely.
-typedef embed_channel(bool, 10) Quit_Chan;
+typedef embed_channel(int, 4)  Int_Chan;
+typedef embed_channel(int, 0)  Int_Chan0;  // unbuffered
 
-typedef struct {
-    String_Chan *in;
-    Quit_Chan *quit;
-    String_Chan *out;
-} Worker_Args;
+// ============================================================
+// Test 1: Basic buffered send/recv (single thread)
+// ============================================================
+void test_basic_buffered(void) {
+    const char *T = "basic_buffered";
+    TEST(T);
+    Int_Chan ch;
+    channel_init(&ch);
 
-typedef struct {
-    String_Chan *out;
-    Quit_Chan   *quit;
-} Writer_Args;
+    bool ok;
+    int val;
 
-// Processor Thread: reads raw lines, simulates work, sends processed lines
-void *processor_thread(void *arg) {
-    Worker_Args *channels = (Worker_Args*)arg;
-    while (true) {
-        String line;
-        bool quit = false;
-        bool ok_line, ok_quit;
-        int which;
-        
-        #define PROCESSOR_ARMS(Send, Recv)      \
-            Recv(channels->in, &line, &ok_line) \
-            Recv(channels->quit, &quit, &ok_quit)
+    channel_send(&ch, 10);
+    channel_send(&ch, 20);
+    channel_send(&ch, 30);
 
-        channel_alt(which, PROCESSOR_ARMS);
-        #undef PROCESSOR_ARMS
+    channel_recv(&ch, &val, &ok);
+    assert(ok && val == 10);
+    channel_recv(&ch, &val, &ok);
+    assert(ok && val == 20);
+    channel_recv(&ch, &val, &ok);
+    assert(ok && val == 30);
 
-        if (which == 0) {
-            if (!ok_line) break;
-            int wait_ms = rand() % 10000;
-            usleep(wait_ms * 1000);
+    PASS(T);
+}
 
-            String_Builder sb = {0};
-            sb_append_cstr(&sb, line);
-            sb_append_cstr(&sb, " [Processed: ");
-            char buf[32];
-            sprintf(buf, "%dms]", wait_ms);
-            sb_append_cstr(&sb, buf);
-            sb_append_null(&sb);
-            free(line);
-            channel_send(channels->out, sb.items);
-        } else {
-            nob_log(INFO, "Processor received quit signal, quiting...");
-            while(true) {
-                channel_recv(channels->in, &line, &ok_line);
-                if (!ok_line) break;
-                free(line);
-            }
-            break;
-        }
+// ============================================================
+// Test 2: Close — recv on empty closed channel returns ok=false
+// ============================================================
+void test_close_empty(void) {
+    const char *T = "close_empty";
+    TEST(T);
+    Int_Chan ch;
+    channel_init(&ch);
+
+    channel_send(&ch, 1);
+    channel_close(&ch);
+
+    bool ok;
+    int val;
+
+    // Buffered item still readable after close
+    channel_recv(&ch, &val, &ok);
+    assert(ok && val == 1);
+
+    // Now empty + closed
+    channel_recv(&ch, &val, &ok);
+    assert(!ok);
+
+    PASS(T);
+}
+
+// ============================================================
+// Test 3: Blocking send (buffer full) — producer blocks until consumer drains
+// ============================================================
+typedef struct { Int_Chan *ch; atomic_int *order; } T3_Args;
+
+void *t3_consumer(void *arg) {
+    T3_Args *a = arg;
+    usleep(20000); // let producer fill and block
+    bool ok; int val;
+    for (int i = 0; i < 6; i++) {
+        channel_recv(a->ch, &val, &ok);
+        assert(ok && val == i);
     }
     return NULL;
 }
 
-// Writer Thread: selects between a processed-line channel and a quit signal.
-//
-// Without channel_alt, the writer would block forever on out_chan once main
-// wants to shut down (out_chan still has pending items or isn't closed yet).
-// With channel_alt, it can react to whichever arrives first: a line to print,
-// or the quit signal telling it to drain and exit.
-void *writer_thread(void *arg) {
-    Writer_Args *wargs = (Writer_Args*)arg;
+void test_blocking_send(void) {
+    const char *T = "blocking_send";
+    TEST(T);
+    Int_Chan ch;
+    channel_init(&ch);
+    atomic_int order = 0;
+    T3_Args args = { &ch, &order };
 
+    pthread_t consumer;
+    pthread_create(&consumer, NULL, t3_consumer, &args);
+
+    for (int i = 0; i < 6; i++) channel_send(&ch, i);
+
+    pthread_join(consumer, NULL);
+    PASS(T);
+}
+
+// ============================================================
+// Test 4: Blocking recv — consumer blocks until producer sends
+// ============================================================
+typedef struct { Int_Chan *ch; } T4_Args;
+
+void *t4_producer(void *arg) {
+    T4_Args *a = arg;
+    usleep(20000);
+    for (int i = 0; i < 4; i++) channel_send(a->ch, i);
+    channel_close(a->ch);
+    return NULL;
+}
+
+void test_blocking_recv(void) {
+    const char *T = "blocking_recv";
+    TEST(T);
+    Int_Chan ch;
+    channel_init(&ch);
+    T4_Args args = { &ch };
+
+    pthread_t producer;
+    pthread_create(&producer, NULL, t4_producer, &args);
+
+    bool ok; int val; int count = 0;
     while (true) {
-        String processed_line = NULL;
-        bool quit_signal      = false;
-        bool   ok_out, ok_quit;
-        int    which;
+        channel_recv(&ch, &val, &ok);
+        if (!ok) break;
+        assert(val == count++);
+    }
+    assert(count == 4);
 
-        // Select between out_chan (processed lines) and quit_chan (shutdown).
-        // Whichever has data first wins; the other arm is left untouched.
-        #define WRITER_ARMS(Send, Recv)                 \
-            Recv(wargs->out,  &processed_line, &ok_out) \
-            Recv(wargs->quit, &quit_signal,    &ok_quit)
+    pthread_join(producer, NULL);
+    PASS(T);
+}
 
-        channel_alt(which, WRITER_ARMS);
-        #undef WRITER_ARMS
+// ============================================================
+// Test 5: Multiple producers + multiple consumers, count items
+// ============================================================
+#define T5_PRODUCERS 8
+#define T5_CONSUMERS 8
+#define T5_ITEMS_PER_PRODUCER 100
 
-        if (which == 0) {
-            // out_chan fired: print the line
-            if (!ok_out) break; // out_chan was closed and empty
-            printf("%s\n", processed_line);
-            fflush(stdout);
-            free(processed_line);
-        } else {
-            // quit_chan fired: drain any remaining lines then exit
-            // (quit_signal is a dummy String, nothing to free for the signal)
-            nob_log(INFO, "Writer received quit signal, draining...");
+typedef struct { Int_Chan *ch; int id; } T5_PArgs;
+typedef struct { Int_Chan *ch; atomic_int *total; } T5_CArgs;
 
-            // Drain whatever is left in out_chan without blocking forever.
-            // Since all processors have already been joined by this point,
-            // no new items will arrive — we just flush what's buffered.
-            bool drain_ok;
-            String remaining;
-            while (true) {
-                channel_recv(wargs->out, &remaining, &drain_ok);
-                if (!drain_ok) break;
-                free(remaining);
-            }
-            break;
-        }
+void *t5_producer(void *arg) {
+    T5_PArgs *a = arg;
+    for (int i = 0; i < T5_ITEMS_PER_PRODUCER; i++) channel_send(a->ch, 1);
+    return NULL;
+}
+void *t5_consumer(void *arg) {
+    T5_CArgs *a = arg;
+    bool ok; int val;
+    while (true) {
+        channel_recv(a->ch, &val, &ok);
+        if (!ok) break;
+        atomic_fetch_add(a->total, 1);
     }
     return NULL;
 }
 
-int main() {
-    srand(time(NULL));
+void test_concurrent(void) {
+    const char *T = "concurrent_producers_consumers";
+    TEST(T);
+    Int_Chan ch;
+    channel_init(&ch);
+    atomic_int total = 0;
 
-    String_Chan raw_chan;
-    String_Chan out_chan;
-    Quit_Chan   quit_chan;
-    channel_init(&raw_chan);
-    channel_init(&out_chan);
-    channel_init(&quit_chan);
+    pthread_t producers[T5_PRODUCERS], consumers[T5_CONSUMERS];
+    T5_PArgs pargs[T5_PRODUCERS];
+    T5_CArgs cargs = { &ch, &total };
 
-    // Start Writer — passes both out_chan and quit_chan so it can alt between them
-    Writer_Args wargs = { .out = &out_chan, .quit = &quit_chan };
-    pthread_t writer;
-    pthread_create(&writer, NULL, writer_thread, &wargs);
-
-    // Start 10 Processors
-    pthread_t processors[10];
-    Worker_Args args = { .in = &raw_chan, .quit = &quit_chan, .out = &out_chan };
-    for (int i = 0; i < (int)ARRAY_LEN(processors); ++i) {
-        pthread_create(&processors[i], NULL, processor_thread, &args);
+    for (int i = 0; i < T5_CONSUMERS; i++)
+        pthread_create(&consumers[i], NULL, t5_consumer, &cargs);
+    for (int i = 0; i < T5_PRODUCERS; i++) {
+        pargs[i] = (T5_PArgs){ &ch, i };
+        pthread_create(&producers[i], NULL, t5_producer, &pargs[i]);
     }
+    for (int i = 0; i < T5_PRODUCERS; i++) pthread_join(producers[i], NULL);
+    channel_close(&ch);
+    for (int i = 0; i < T5_CONSUMERS; i++) pthread_join(consumers[i], NULL);
 
-    // Main Thread: read stdin and feed raw_chan until EOF
-    Buffered_Reader br = create_br(STDIN_FILENO);
-    while (true) {
-        String_Builder sb = {0};
-        bool got_line = false;
-        while (br_read_line_to_sb(&br, &sb)) {
-            if (sb.count > 0) { got_line = true; break; }
-        }
-        if (!got_line) break; // EOF
-        sb_append_null(&sb);
-        if (strcmp(sb.items, "quit") == 0) break;
-        channel_send(&raw_chan, sb.items);
-    }
-    channel_close(&raw_chan);
-    for (int i = 0; i < (int)ARRAY_LEN(processors); ++i) {
-        channel_send(&quit_chan, NULL);
-    }
-    for (int i = 0; i < (int)ARRAY_LEN(processors); ++i) {
-        pthread_join(processors[i], NULL);
-    }
-    channel_close(&out_chan);
-    pthread_join(writer, NULL);
+    assert(atomic_load(&total) == T5_PRODUCERS * T5_ITEMS_PER_PRODUCER);
+    PASS(T);
+}
 
+// ============================================================
+// Test 6: channel_alt — fast path, both channels have data
+// ============================================================
+void test_alt_fast_path(void) {
+    const char *T = "alt_fast_path";
+    TEST(T);
+    Int_Chan a, b;
+    channel_init(&a);
+    channel_init(&b);
+
+    channel_send(&a, 111);
+    channel_send(&b, 222);
+
+    // First alt should pick one of them (whichever is first in arm order)
+    int va = -1, vb = -1;
+    bool ok_a, ok_b;
+    int which;
+
+    #define ARMS1(Send, Recv) Recv(&a, &va, &ok_a) Recv(&b, &vb, &ok_b)
+    channel_alt(which, ARMS1);
+    #undef ARMS1
+    assert(which == 0 || which == 1);
+    // The winning channel's value should be set
+    if (which == 0) assert(ok_a && va == 111);
+    else            assert(ok_b && vb == 222);
+
+    PASS(T);
+}
+
+// ============================================================
+// Test 7: channel_alt — slow path, recv arm woken by sender
+// ============================================================
+typedef struct { Int_Chan *ch; int val; } T7_Args;
+
+void *t7_sender(void *arg) {
+    T7_Args *a = arg;
+    usleep(20000);
+    channel_send(a->ch, a->val);
+    return NULL;
+}
+
+void test_alt_slow_path_recv(void) {
+    const char *T = "alt_slow_path_recv";
+    TEST(T);
+    Int_Chan a, b;
+    channel_init(&a);
+    channel_init(&b);
+
+    // Only chan_b will receive a value
+    T7_Args args = { &b, 42 };
+    pthread_t sender;
+    pthread_create(&sender, NULL, t7_sender, &args);
+
+    int va = -1, vb = -1;
+    bool ok_a, ok_b;
+    int which;
+
+    #define ARMS2(Send, Recv) Recv(&a, &va, &ok_a) Recv(&b, &vb, &ok_b)
+    channel_alt(which, ARMS2);
+    #undef ARMS2
+
+    assert(which == 1);
+    assert(ok_b && vb == 42);
+
+    pthread_join(sender, NULL);
+    PASS(T);
+}
+
+// ============================================================
+// Test 8: channel_alt — send arm fires when receiver is waiting
+// ============================================================
+typedef struct { Int_Chan *ch; int *got; bool *ok; } T8_Args;
+
+void *t8_receiver(void *arg) {
+    T8_Args *a = arg;
+    usleep(20000);
+    channel_recv(a->ch, a->got, a->ok);
+    return NULL;
+}
+
+void test_alt_send_arm(void) {
+    const char *T = "alt_send_arm";
+    TEST(T);
+    Int_Chan a, b;
+    channel_init(&a);
+    channel_init(&b);
+
+    int got = -1; bool ok = false;
+    T8_Args rargs = { &b, &got, &ok };
+    pthread_t receiver;
+    pthread_create(&receiver, NULL, t8_receiver, &rargs);
+
+    usleep(40000); // ensure receiver is blocked
+
+    int dummy = -1; bool ok_a;
+    int which;
+
+    // Send arm on b; recv arm on a (a has nothing)
+    #define ARMS3(Send, Recv) Recv(&a, &dummy, &ok_a) Send(&b, 99)
+    channel_alt(which, ARMS3);
+    #undef ARMS3
+
+    assert(which == 1); // Send arm fired
+
+    pthread_join(receiver, NULL);
+    assert(ok && got == 99);
+
+    PASS(T);
+}
+
+// ============================================================
+// Test 9: channel_alt called twice in the same function (label safety)
+// ============================================================
+void test_alt_twice_same_function(void) {
+    const char *T = "alt_twice_same_function";
+    TEST(T);
+    Int_Chan a, b;
+    channel_init(&a);
+    channel_init(&b);
+
+    channel_send(&a, 1);
+    channel_send(&b, 2);
+
+    int va = -1, vb = -1;
+    bool ok_a, ok_b;
+    int which;
+
+    #define FIRST_ARMS(Send, Recv) Recv(&a, &va, &ok_a) Recv(&b, &vb, &ok_b)
+    channel_alt(which, FIRST_ARMS);
+    #undef FIRST_ARMS
+    assert(which == 0 && va == 1);
+
+    va = -1; vb = -1;
+    #define SECOND_ARMS(Send, Recv) Recv(&a, &va, &ok_a) Recv(&b, &vb, &ok_b)
+    channel_alt(which, SECOND_ARMS);
+    #undef SECOND_ARMS
+    assert(which == 1 && vb == 2);
+
+    PASS(T);
+}
+
+// ============================================================
+// Test 10: alt on closed channel — fires immediately with ok=false
+// ============================================================
+void test_alt_closed(void) {
+    const char *T = "alt_closed";
+    TEST(T);
+    Int_Chan a, b;
+    channel_init(&a);
+    channel_init(&b);
+    channel_close(&b);
+
+    int va = -1, vb = -1;
+    bool ok_a = true, ok_b = true;
+    int which;
+
+    #define ARMS4(Send, Recv) Recv(&a, &va, &ok_a) Recv(&b, &vb, &ok_b)
+    channel_alt(which, ARMS4);
+    #undef ARMS4
+
+    assert(which == 1);
+    assert(!ok_b);
+
+    PASS(T);
+}
+
+// ============================================================
+// Main
+// ============================================================
+int main(void) {
+    test_basic_buffered();
+    test_close_empty();
+    test_blocking_send();
+    test_blocking_recv();
+    test_concurrent();
+    test_alt_fast_path();
+    test_alt_slow_path_recv();
+    test_alt_send_arm();
+    test_alt_twice_same_function();
+    test_alt_closed();
+
+    fprintf(stderr, "\nAll tests passed.\n");
     return 0;
 }
