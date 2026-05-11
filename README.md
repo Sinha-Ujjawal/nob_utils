@@ -43,8 +43,8 @@ See `test_` files in [`tests`](./tests/) directory to see few example usage of t
 | [`nob_huge_page_alloc.h`](./src/nob_huge_page_alloc.h) | A simple Huge Page Allocator using MMAP (in Linux and Macos), and VirtualAlloc for Windows | No Dependencies |
 | [`nob_br.h`](./src/nob_br.h) | A simple Buffered Reader implementation | Depends on [`nob.h`](./thirdparty/nob.h) for `String_Builder`, and `nob_log` |
 | [`nob_channels.h`](./src/nob_channels.h) | A simple Channel implementation in C based on [Rich Hickey's "Inside core.async Channels" by Rich Hickey (2014) talk](https://youtu.be/hMEX6lfBeRM?si=SP45SY3rooIaru3l). Note that this is mostly for POSIX system and is mostly vibe coded using Gemini and Claude Code | Depends in [`nob_fixed_deque.h`](./src/nob_fixed_deque.h) for the Fixed deque impl. |
-| [`nob_jsonrpc.h`](./src/nob_jsonrpc.h) | A simple [jsonrpc](https://www.jsonrpc.org/specification) implementation | Depends on [`nob.h`](./thirdparty/nob.h), [`jimp.h`](./thirdparty/jimp.h), [`jim.h`](./thirdparty/jim.h) and [`nob_br.h`](./src/nob_br.h) |
-| [`nob_mcp.h`](./src/nob_mcp.h) | A simple [MCP Server](https://en.wikipedia.org/wiki/Model_Context_Protocol) which implements tools/list and tools/call to be useful for creating MCP servers | Depends on [`nob.h`](./thirdparty/nob.h), [`jimp.h`](./thirdparty/jimp.h), [`jim.h`](./thirdparty/jim.h), [`nob_br.h`](./src/nob_br.h) and [`nob_jsonrpc.h`](src/nob_jsonrpc.h) |
+| [`nob_jsonrpc.h`](./src/nob_jsonrpc.h) | A simple [jsonrpc](https://www.jsonrpc.org/specification) implementation | Depends on [`nob.h`](./thirdparty/nob.h), [`jimp.h`](./thirdparty/jimp.h) and [`jim.h`](./thirdparty/jim.h) |
+| [`nob_mcp.h`](./src/nob_mcp.h) | A simple [MCP Server](https://en.wikipedia.org/wiki/Model_Context_Protocol) which implements tools/list and tools/call to be useful for creating MCP servers | Depends on [`nob.h`](./thirdparty/nob.h), [`jimp.h`](./thirdparty/jimp.h), [`jim.h`](./thirdparty/jim.h) and [`nob_jsonrpc.h`](src/nob_jsonrpc.h) |
 
 **Note No Dependencies except libc :)**
 

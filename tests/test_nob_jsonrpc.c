@@ -1,6 +1,4 @@
 #define _GNU_SOURCE
-#include <sys/mman.h>
-#include <unistd.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdbool.h>
@@ -9,7 +7,6 @@
 #define JIMP_IMPLEMENTATION
 #define JIM_IMPLEMENTATION
 #define NOB_JSONRPC_IMPLEMENTATION
-#define NOB_BR_IMPLEMENTATION
 #include "nob.h"
 #include "jimp.h"
 #include "jim.h"
@@ -107,51 +104,55 @@ JSONRPC_Error_Code method_handler(void *ctx, String_View method, void *ptr, Jim 
 
 // --- FULL TEST HARNESS ---
 
-void run_test(const char *test_name, const char *json_request) {
+void run_test(const char *test_name, const char *json_request, JSONRPC_Request_Handler *req_handler, Jim *success, Jim *failure) {
     nob_log(INFO, "TEST [%s]: Sending -> %s", test_name, json_request);
 
-    // 1. Setup Input (Mock Stdin)
-    int in_fd = memfd_create("mock_in", 0);
-    write(in_fd, json_request, strlen(json_request));
-    lseek(in_fd, 0, SEEK_SET);
+    // Run Library Logic
+    bool res = jsonrpc_handle_request(
+        req_handler,
+        "in", json_request, strlen(json_request),
+        success, failure
+    );
 
-    // 2. Setup Output (Mock Stdout)
-    int out_fd = memfd_create("mock_out", 0);
-
-    // 3. Setup Library Session
-    Params params = {0};
-    JSONRPC_Params_Parser p_parser = {.params = &params, .parse_clb = parse_params};
-    JSONRPC_Session session = create_jsonrpc_session(in_fd, "in", out_fd, "out", p_parser, method_handler, NULL);
-
-    // 4. Run Library Logic
-    if (!jsonrpc_handle_request(&session)) {
-        nob_log(WARNING, "Session ended (likely EOF)");
+    // Render Response
+    String_View response = {0};
+    if (res) {
+        response = sv_from_parts(success->sink, success->sink_count);
+    } else {
+        response = sv_from_parts(failure->sink, failure->sink_count);
     }
+    nob_log(INFO, "RESPONSE: "SV_Fmt"\n", SV_Arg(response));
 
-    // 5. Read Back Output
-    char response[1024] = {0};
-    lseek(out_fd, 0, SEEK_SET);
-    read(out_fd, response, sizeof(response) - 1);
-    nob_log(INFO, "RESPONSE: %s\n", response);
-
-    // 6. Manual Cleanup (Library doesn't close FDs)
-    free_jsonrpc_session(&session);
-    close(in_fd);
-    close(out_fd);
 }
 
 int main(void) {
+    // Setup
+    Jim success = {0};
+    Jim failure = {0};
+    Params params = {0};
+    JSONRPC_Params_Parser p_parser = {.params = &params, .parse_clb = parse_params};
+    JSONRPC_Request_Handler req_handler = create_jsonrpc_request_handler(p_parser, method_handler, NULL);
+
     // Case 1: Subtract (42 - 23)
     run_test("Subtract Success",
-        "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"subtract\",\"params\":[42, 23]}");
+        "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"subtract\",\"params\":[42, 23]}", &req_handler, &success, &failure);
 
     // Case 2: Initialize
     run_test("Initialize Success",
-        "{\"jsonrpc\":\"2.0\",\"id\":2,\"method\":\"initialize\",\"params\":{\"protocolVersion\":\"1.0\"}}");
+        "{\"jsonrpc\":\"2.0\",\"id\":2,\"method\":\"initialize\",\"params\":{\"protocolVersion\":\"1.0\"}}", &req_handler, &success, &failure);
 
     // Case 3: Parse Error (Missing bracket)
     run_test("Invalid JSON",
-        "{\"jsonrpc\":\"2.0\",\"method\":\"subtract\",\"params\":[1, 2");
+        "{\"jsonrpc\":\"2.0\",\"method\":\"subtract\",\"params\":[1, 2", &req_handler, &success, &failure);
+
+    // Cleanup
+    free_jsonrpc_request_handler(&req_handler);
+
+    free(success.sink);
+    free(success.scopes);
+
+    free(failure.sink);
+    free(failure.scopes);
 
     return 0;
 }
