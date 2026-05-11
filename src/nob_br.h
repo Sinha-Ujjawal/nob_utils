@@ -124,6 +124,10 @@ bool nob_br_read_while(Nob_Buffered_Reader *reader, int (*predicate)(int c), voi
             if (reader->count == 0) return true;
         }
 
+        if (fcntl(reader->fdin, F_GETFD) < 0 && errno == EBADF) { // FD is closed
+            return false;
+        }
+
         while(reader->cursor < reader->count) {
             char c = reader->items[reader->cursor];
             if (!predicate(c)) {
