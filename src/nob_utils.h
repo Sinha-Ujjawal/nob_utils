@@ -28,6 +28,7 @@
 #include "nob_hash.h"
 #include "nob_ht.h"
 #include "nob_ilist.h"
+#include "nob_entity.h"
 #include "nob_profiler.h"
 #include "nob_graph.h"
 #include "nob_rc.h"

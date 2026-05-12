@@ -27,6 +27,7 @@ Test_Case test_cases[] = {
     mk_test(test_nob_hash                   , "src/nob_hash.h"),
     mk_test(test_nob_ht                     , "src/nob_ht.h", "src/nob_hash.h"),
     mk_test(test_nob_ilist                  , "src/nob_ilist.h"),
+    mk_test(test_nob_entity                 , "src/nob_entity.h", "src/nob_ilist.h"),
     mk_test(test_nob_profiler               , "src/nob_profiler.h"),
     mk_test(test_nob_graph                  , "src/nob_graph.h", "src/nob_deque.h", "src/nob_ht.h", "src/nob_hash.h"),
     mk_test(test_nob_rc                     , "src/nob_rc.h"),
