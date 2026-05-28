@@ -5,12 +5,10 @@
 // #define NOB_IMPLEMENTATION
 // #define JIM_IMPLEMENTATION
 // #define JIMP_IMPLEMENTATION
-// #define NOB_BR_IMPLEMENTATION
 // #define NOB_JSONRPC_IMPLEMENTATION
 // #include "nob.h"
 // #include "jim.h"
 // #include "jimp.h"
-// #include "nob_br.h"
 // #include "nob_jsonrpc.h"
 
 #define NOB_MCP_DEFAULT_PROTOCOL_VER "2024-11-05"
