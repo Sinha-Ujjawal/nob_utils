@@ -1,13 +1,6 @@
 #ifndef NOB_UTILS_H_
 #define NOB_UTILS_H_
 
-#define nob_embed_da(T)  \
-    struct {             \
-        T *items;        \
-        size_t count;    \
-        size_t capacity; \
-    }
-
 // Thirdparty
 #ifndef NOB_H_
 #include "nob.h"
@@ -21,6 +14,7 @@
 #include "jimp.h"
 #endif // JIMP_H_
 
+#include "nob_ext.h"
 #include "nob_fa.h"
 #include "nob_heapq.h"
 #include "nob_deque.h"
@@ -38,12 +32,5 @@
 #include "nob_jsonrpc.h"
 #include "nob_mcp.h"
 #include "num_defs.h"
-
-#ifndef NOB_UTILS_STRIP_PREFIX_GUARD_
-#define NOB_UTILS_STRIP_PREFIX_GUARD_
-    #ifndef NOB_UNSTRIP_PREFIX
-        #define embed_da nob_embed_da
-    #endif // NOB_UNSTRIP_PREFIX
-#endif // NOB_UTILS_STRIP_PREFIX_GUARD_
 
 #endif // NOB_UTILS_H_

@@ -30,6 +30,7 @@ See `test_` files in [`tests`](./tests/) directory to see few example usage of t
 
 | Library | Description | Dependencies |
 | ------- | ----------- | ------------ |
+| [`nob_ext.h`](./src/nob_ext.h) | Useful extensions for [`nob.h`](./thirdparty/nob.h) | [`nob.h`](./thirdparty/nob.h) |
 | [`nob_fa.h`](./src/nob_fa.h) | It provided nob's dynamic array ops like da_append and da_pop on a fixed length array | No Dependecies |
 | [`nob_heapq.h`](./src/nob_heapq.h) | It is a library that provides [`Python's heapq`](https://docs.python.org/3/library/heapq.html) | [`nob.h`](./thirdparty/nob.h) and/or [`nob_fa.h`](./src/nob_fa.h) Heapq supports both dynamic and fixed arrays |
 | [`nob_deque.h`](./src/nob_deque.h) | It is a library that provides Double ended queue using [Circular Buffer](https://en.wikipedia.org/wiki/Circular_buffer) | No Dependencies |

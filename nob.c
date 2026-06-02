@@ -11,32 +11,34 @@ typedef struct {
     char const** source_files;
     size_t num_source_files;
     bool check_to_build_or_run;
+    bool needs_explicit_build_or_run;
 } Test_Case;
 
-#define mk_test(name, ...) {                                                                 \
+#define mk_test(name, explicit, ...) {                                                       \
     .test_binary_exec = BUILD_DIR "/" #name,                                                 \
     .source_files = (char const*[]){ "tests/" #name ".c", "thirdparty/nob.h", __VA_ARGS__ }, \
     .num_source_files = 2 + (sizeof((char const*[]){ __VA_ARGS__ }) / sizeof(char const*)),  \
+    .needs_explicit_build_or_run = (explicit),                                               \
 }
 
 Test_Case test_cases[] = {
-    mk_test(test_nob_fa                     , "src/nob_fa.h"),
-    mk_test(test_nob_heapq                  , "src/nob_heapq.h"),
-    mk_test(test_nob_deque                  , "src/nob_deque.h"),
-    mk_test(test_nob_fixed_deque            , "src/nob_fixed_deque.h"),
-    mk_test(test_nob_hash                   , "src/nob_hash.h"),
-    mk_test(test_nob_ht                     , "src/nob_ht.h", "src/nob_hash.h"),
-    mk_test(test_nob_ilist                  , "src/nob_ilist.h"),
-    mk_test(test_nob_entity                 , "src/nob_entity.h", "src/nob_ilist.h"),
-    mk_test(test_nob_profiler               , "src/nob_profiler.h"),
-    mk_test(test_nob_graph                  , "src/nob_graph.h", "src/nob_deque.h", "src/nob_ht.h", "src/nob_hash.h"),
-    mk_test(test_nob_rc                     , "src/nob_rc.h"),
-    mk_test(test_nob_profile_da_vs_deque    , "src/nob_profiler.h", "src/nob_fa.h", "src/nob_deque.h"),
-    mk_test(test_nob_profile_alloc_huge_page, "src/nob_profiler.h", "src/nob_fa.h", "src/nob_huge_page_alloc.h"),
-    mk_test(test_nob_br                     , "src/nob_br.h"),
-    mk_test(test_nob_jsonrpc                , "src/nob_jsonrpc.h", "thirdparty/jim.h", "thirdparty/jimp.h"),
-    mk_test(test_nob_mcp                    , "src/nob_mcp.h", "src/nob_jsonrpc.h", "thirdparty/jim.h", "thirdparty/jimp.h"),
-    mk_test(test_nob_channels               , "src/nob_channels.h", "src/nob_deque.h", "src/nob_fixed_deque.h"),
+    mk_test(test_nob_fa                     , false, "src/nob_fa.h"),
+    mk_test(test_nob_heapq                  , false, "src/nob_heapq.h"),
+    mk_test(test_nob_deque                  , false, "src/nob_deque.h"),
+    mk_test(test_nob_fixed_deque            , false, "src/nob_fixed_deque.h"),
+    mk_test(test_nob_hash                   , false, "src/nob_hash.h"),
+    mk_test(test_nob_ht                     , false, "src/nob_ht.h", "src/nob_hash.h"),
+    mk_test(test_nob_ilist                  , false, "src/nob_ilist.h"),
+    mk_test(test_nob_entity                 , false, "src/nob_entity.h", "src/nob_ilist.h"),
+    mk_test(test_nob_profiler               , true , "src/nob_profiler.h"),
+    mk_test(test_nob_graph                  , false, "src/nob_graph.h", "src/nob_deque.h", "src/nob_ht.h", "src/nob_hash.h"),
+    mk_test(test_nob_rc                     , false, "src/nob_rc.h"),
+    mk_test(test_nob_profile_da_vs_deque    , true , "src/nob_profiler.h", "src/nob_fa.h", "src/nob_deque.h"),
+    mk_test(test_nob_profile_alloc_huge_page, true , "src/nob_profiler.h", "src/nob_fa.h", "src/nob_huge_page_alloc.h"),
+    mk_test(test_nob_br                     , false, "src/nob_br.h"),
+    mk_test(test_nob_jsonrpc                , false, "src/nob_jsonrpc.h", "thirdparty/jim.h", "thirdparty/jimp.h"),
+    mk_test(test_nob_mcp                    , false, "src/nob_mcp.h", "src/nob_jsonrpc.h", "thirdparty/jim.h", "thirdparty/jimp.h"),
+    mk_test(test_nob_channels               , false, "src/nob_channels.h", "src/nob_deque.h", "src/nob_fixed_deque.h"),
 };
 
 bool build(bool always_build) {
@@ -85,19 +87,20 @@ int main(int argc, char **argv) {
 
     char const* program = shift(argv, argc);
 
-    #define USAGE                                                                   \
-        do {                                                                        \
-            nob_log(INFO, "Usage: %s <sub-command> [-f] [test-cases...]", program); \
-            nob_log(INFO, "SUBCOMMANDS:");                                          \
-            nob_log(INFO, "  build: Only builds the test cases");                   \
-            nob_log(INFO, "  run:   Builds and run the test cases");                \
-            nob_log(INFO, "  help:  Prints this help message");                     \
-            nob_log(INFO, "-f: Will forcefully build the test-files");              \
-            nob_log(INFO, "test-cases: Lets you chose which test-cases to build");  \
-            nob_log(INFO, "  Available test-cases");                                \
-            for (size_t i = 0; i < ARRAY_LEN(test_cases); i++) {                    \
-                nob_log(INFO, "    %s", test_cases[i].test_binary_exec);            \
-            }                                                                       \
+    #define USAGE                                                                                                                         \
+        do {                                                                                                                              \
+            nob_log(INFO, "Usage: %s <sub-command> [-f] [test-cases...]", program);                                                       \
+            nob_log(INFO, "SUBCOMMANDS:");                                                                                                \
+            nob_log(INFO, "  build: Only builds the test cases");                                                                         \
+            nob_log(INFO, "  run:   Builds and run the test cases");                                                                      \
+            nob_log(INFO, "  help:  Prints this help message");                                                                           \
+            nob_log(INFO, "-f: Will forcefully build the test-files");                                                                    \
+            nob_log(INFO, "test-cases: Lets you chose which test-cases to build");                                                        \
+            nob_log(INFO, "  Available test-cases");                                                                                      \
+            for (size_t i = 0; i < ARRAY_LEN(test_cases); i++) {                                                                          \
+                nob_log(INFO, "    %s%s", test_cases[i].test_binary_exec, test_cases[i].needs_explicit_build_or_run ? "[explicit]" : ""); \
+            }                                                                                                                             \
+            nob_log(INFO, "Note that the test-cases which are marked [explicit] needs to passed explcitly to build/run them");            \
         } while(0)
 
     if (argc <= 0) {
@@ -134,7 +137,7 @@ int main(int argc, char **argv) {
 
     if (!any_test_cases_provided) {
         for (size_t i = 0; i < ARRAY_LEN(test_cases); i++) {
-            test_cases[i].check_to_build_or_run = true;
+            test_cases[i].check_to_build_or_run = !test_cases[i].needs_explicit_build_or_run && true;
         }
     }
 

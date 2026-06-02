@@ -65,6 +65,50 @@ int main(void) {
                 )
             );
         }
+
+        if (count <= 4096 * 1024) {
+            {
+                nob_log(INFO, "DA: Prepending %zu KB", total_size / 1024);
+                memset(&tester, 0, sizeof(Repeatition_Tester));
+                repeatition_test(
+                    "Dynamic_Array",
+                    tester, cpu_timer_freq, seconds_to_try, total_size,
+                    (
+                        da.count = 0;
+                    ),
+                    (
+                        for (u64 i = 0; i < count; i++) {
+                            da_prepend(&da, i);
+                        }
+                    ),
+                    (
+                        repeatition_tester_count_bytes(&tester, total_size);
+                        da.count = 0;
+                    )
+                );
+            }
+
+            {
+                nob_log(INFO, "Deque: Prepending %zu KB", total_size / 1024);
+                memset(&tester, 0, sizeof(Repeatition_Tester));
+                repeatition_test(
+                    "Dynamic_Deque",
+                    tester, cpu_timer_freq, seconds_to_try, total_size,
+                    (
+                        deq.count = 0;
+                    ),
+                    (
+                        for (u64 i = 0; i < count; i++) {
+                            deque_prepend(&deq, i);
+                        }
+                    ),
+                    (
+                        repeatition_tester_count_bytes(&tester, total_size);
+                        deq.count = 0;
+                    )
+                );
+            }
+        }
     }
     free(da.items);
     free(deq.items);
