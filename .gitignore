@@ -5,3 +5,4 @@ build
 *.swo
 tags
 .gdb_history
+README.html

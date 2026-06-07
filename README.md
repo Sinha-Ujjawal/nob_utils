@@ -19,17 +19,17 @@ See `test_` files in [`tests`](./tests/) directory to see few example usage of t
 ## Thirdparty
 
 | Library                         | Reference                        |
-| ---                             | ---                              |
+| :--                             | :--                              |
 | [`nob.h`](./thirdparty/nob.h)   | https://github.com/tsoding/nob.h |
 | [`jim.h`](./thirdparty/jim.h)   | https://github.com/tsoding/jim   |
 | [`jimp.h`](./thirdparty/jimp.h) | https://github.com/tsoding/jim   |
 
-**Note that I have modified jimp.h for my liking**
+**Note that I have modified jim.h and jimp.h for my liking**
 
-## Current Implementations
+## Current Implementations:
 
 | Library                                                | Dependencies                                                                                                                                      | Description                                                                                                                                                                                                                                                              |
-| -------                                                | ------------                                                                                                                                      | -----------                                                                                                                                                                                                                                                              |
+| :------                                                | :-----------                                                                                                                                      | :----------                                                                                                                                                                                                                                                              |
 | [`nob_ext.h`](./src/nob_ext.h)                         | [`nob.h`](./thirdparty/nob.h)                                                                                                                     | Useful extensions for [`nob.h`](./thirdparty/nob.h)                                                                                                                                                                                                                      |
 | [`nob_fa.h`](./src/nob_fa.h)                           | No Dependecies                                                                                                                                    | It provided nob's dynamic array ops like da_append and da_pop on a fixed length array                                                                                                                                                                                    |
 | [`nob_heapq.h`](./src/nob_heapq.h)                     | [`nob.h`](./thirdparty/nob.h) and/or [`nob_fa.h`](./src/nob_fa.h) Heapq supports both dynamic and fixed arrays                                    | It is a library that provides [`Python's heapq`](https://docs.python.org/3/library/heapq.html)                                                                                                                                                                           |
@@ -48,9 +48,18 @@ See `test_` files in [`tests`](./tests/) directory to see few example usage of t
 | [`nob_jsonrpc.h`](./src/nob_jsonrpc.h)                 | Depends on [`nob.h`](./thirdparty/nob.h), [`jimp.h`](./thirdparty/jimp.h) and [`jim.h`](./thirdparty/jim.h)                                       | A simple [jsonrpc](https://www.jsonrpc.org/specification) implementation                                                                                                                                                                                                 |
 | [`nob_mcp.h`](./src/nob_mcp.h)                         | Depends on [`nob.h`](./thirdparty/nob.h), [`jimp.h`](./thirdparty/jimp.h), [`jim.h`](./thirdparty/jim.h) and [`nob_jsonrpc.h`](src/nob_jsonrpc.h) | A simple [MCP Server](https://en.wikipedia.org/wiki/Model_Context_Protocol) which implements tools/list and tools/call to be useful for creating MCP servers                                                                                                             |
 
-## Supported Platforms:
+## Build Report:
+See [build_report.md](./build_report.md) to see the current status of build for different platforms.
 
-1. Linux x86-64
+## Host Machine (Developer's Machine):
+Linux x86-64 (Debian)
+
+## Compiler used for testing:
+1. Download [zig](https://ziglang.org/download/). Make sure to put the `zig` compiler to your `PATH` variable.
+2. Build and Run tests. [nob.c](./nob.c) uses [zig](https://ziglang.org/download/) compiler to build tests for different platforms. Tests are run for native platform by default. Use [qemu](https://www.qemu.org/) for running `Linux` executables, and use [wine](https://www.winehq.org/) for running `Windows`. You can use `qemu` for running for all three OS, but it is PITA IMO.
+```console
+cc -o nob nob.c && ./nob run
+```
 
 ## Copyrights
 
