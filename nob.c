@@ -70,6 +70,7 @@ Test_Case test_cases[] = {
     mk_test(test_nob_profile_fp_div_vs_fp_mul  , true , "src/nob_profiler.h"),
     mk_test(test_nob_profile_int_div_vs_int_mul, true , "src/nob_profiler.h"),
     mk_test(test_nob_bisect                    , false, "src/nob_bisect.h"),
+    mk_test(test_nob_prime                     , false, "src/nob_bisect.h", "src/nob_prime.h"),
 };
 
 typedef struct {
