@@ -69,6 +69,7 @@ Test_Case test_cases[] = {
     mk_test(test_nob_profile_alloc_huge_page   , true , "src/nob_profiler.h", "src/nob_fa.h", "src/nob_huge_page_alloc.h"),
     mk_test(test_nob_profile_fp_div_vs_fp_mul  , true , "src/nob_profiler.h"),
     mk_test(test_nob_profile_int_div_vs_int_mul, true , "src/nob_profiler.h"),
+    mk_test(test_nob_bisect                    , false, "src/nob_bisect.h"),
 };
 
 typedef struct {
@@ -120,7 +121,7 @@ bool build(bool always_build) {
                         "-I./thirdparty", "-I./src",
                         "-O1",\
                         "-Wall", "-Wextra", "-Werror", "-Wswitch-enum",
-                        "-Wno-unused-variable", "-Wno-unused-but-set-variable", "-Wno-format", // TODO: fix these warning errors
+                        "-Wno-unused-variable", "-Wno-unused-but-set-variable", "-Wno-format", "-Wno-error=gcc-install-dir-libstdcxx", // TODO: fix these warning errors
                         "-ggdb",
                         "-o", output_path,
                         test_case.source_files[0]
