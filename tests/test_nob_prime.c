@@ -15,5 +15,9 @@ int main(void) {
             printf("%zu\n", i);
         }
     }
+    for (size_t i = 1; i < 100; i++) {
+        printf("Next Prime Greater >= %zu: %zu\n", i, next_prime_ge(i));
+        printf("Next Prime Greater >  %zu: %zu\n", i, next_prime_gt(i));
+    }
     return 0;
 }

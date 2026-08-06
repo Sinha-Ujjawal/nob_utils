@@ -34,5 +34,6 @@
 #include "num_defs.h"
 #include "nob_bisect.h"
 #include "nob_prime.h"
+#include "nob_shuffle.h"
 
 #endif // NOB_UTILS_H_

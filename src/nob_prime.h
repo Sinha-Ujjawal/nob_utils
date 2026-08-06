@@ -18,6 +18,8 @@ typedef struct {
 } Nob__Primes;
 
 bool nob_is_prime(size_t x);
+size_t nob_next_prime_gt(size_t x);
+size_t nob_next_prime_ge(size_t x);
 
 #endif // NOB_PRIME_H_
 
@@ -32,7 +34,7 @@ int nob__lte_for_size_t(const void *p1, const void *p2, void *arg) {
     return v1 - v2;
 }
 
-bool nob_is_prime(size_t x) {
+void nob__ensure_prime_array_is_filled(size_t x) {
     if (nob__primes.count == 0) {
         nob_da_append(&nob__primes, 2);
         nob_da_append(&nob__primes, 3);
@@ -43,7 +45,7 @@ bool nob_is_prime(size_t x) {
         while (i <= x) {
             bool is_i_prime = true;
             nob_da_foreach(size_t, it, &nob__primes) {
-                if (*it * *it >= i) {
+                if (*it * *it > i) {
                     break;
                 }
                 if (i % *it == 0) {
@@ -57,11 +59,46 @@ bool nob_is_prime(size_t x) {
             i += 2;
         }
     }
+}
 
+bool nob_is_prime(size_t x) {
+    nob__ensure_prime_array_is_filled(x);
     int idx = nob_bisect_index(
         nob__primes.items, nob__primes.count, sizeof(*nob__primes.items),
         &x, nob__lte_for_size_t, NULL);
     return idx >= 0;
+}
+
+size_t nob_next_prime_gt(size_t x) {
+    if (x < 2) return 2;
+    if (x == 2) return 3;
+    size_t y = x;
+    if ((x & 1) == 0) y += 1; // increment y if x is even and not 2
+    const size_t *ptr = NULL;
+    while (ptr == NULL) {
+        nob__ensure_prime_array_is_filled(y);
+        ptr = nob_bisect_find_gt(
+            nob__primes.items, nob__primes.count, sizeof(*nob__primes.items),
+            &x, nob__lte_for_size_t, NULL);
+        if (ptr == NULL) y += 2;
+    }
+    return *ptr;
+}
+
+size_t nob_next_prime_ge(size_t x) {
+    if (x <= 2) return 2;
+    if ((x & 1) == 0) x += 1; // increment if x is even and not 2
+    size_t y = x;
+    if ((x & 1) == 0) y += 1; // increment y if x is even and not 2
+    const size_t *ptr = NULL;
+    while (ptr == NULL) {
+        nob__ensure_prime_array_is_filled(y);
+        ptr = nob_bisect_find_ge(
+            nob__primes.items, nob__primes.count, sizeof(*nob__primes.items),
+            &x, nob__lte_for_size_t, NULL);
+        if (ptr == NULL) y += 2;
+    }
+    return *ptr;
 }
 
 #endif // NOB_PRIME_IMPLEMENTATION
@@ -69,6 +106,8 @@ bool nob_is_prime(size_t x) {
 #ifndef NOB_PRIME_STRIP_PREFIX_GUARD_
 #define NOB_PRIME_STRIP_PREFIX_GUARD_
     #ifndef NOB_UNSTRIP_PREFIX
-        #define is_prime nob_is_prime
+        #define is_prime      nob_is_prime
+        #define next_prime_gt nob_next_prime_gt
+        #define next_prime_ge nob_next_prime_ge
     #endif // NOB_UNSTRIP_PREFIX
 #endif // NOB_PRIME_STRIP_PREFIX_GUARD_
