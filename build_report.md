@@ -2,9 +2,8 @@
 Test Case: test_nob_fa
 Target: x86_64-linux-gnu
 Errors:
-zig: warning: future releases of the clang compiler will prefer GCC installations containing libstdc++ include directories; '/usr/lib/gcc/x86_64-linux-gnu/13' would be chosen over '/usr/lib/gcc/x86_64-linux-gnu/14' [-Wgcc-install-dir-libstdcxx]
 
-Status: ❌ Failure
+Status: ✅ Success
 ```
 ```
 Test Case: test_nob_fa
@@ -45,9 +44,8 @@ Status: ✅ Success
 Test Case: test_nob_heapq
 Target: x86_64-linux-gnu
 Errors:
-zig: warning: future releases of the clang compiler will prefer GCC installations containing libstdc++ include directories; '/usr/lib/gcc/x86_64-linux-gnu/13' would be chosen over '/usr/lib/gcc/x86_64-linux-gnu/14' [-Wgcc-install-dir-libstdcxx]
 
-Status: ❌ Failure
+Status: ✅ Success
 ```
 ```
 Test Case: test_nob_heapq
@@ -88,9 +86,8 @@ Status: ✅ Success
 Test Case: test_nob_deque
 Target: x86_64-linux-gnu
 Errors:
-zig: warning: future releases of the clang compiler will prefer GCC installations containing libstdc++ include directories; '/usr/lib/gcc/x86_64-linux-gnu/13' would be chosen over '/usr/lib/gcc/x86_64-linux-gnu/14' [-Wgcc-install-dir-libstdcxx]
 
-Status: ❌ Failure
+Status: ✅ Success
 ```
 ```
 Test Case: test_nob_deque
@@ -131,9 +128,8 @@ Status: ✅ Success
 Test Case: test_nob_fixed_deque
 Target: x86_64-linux-gnu
 Errors:
-zig: warning: future releases of the clang compiler will prefer GCC installations containing libstdc++ include directories; '/usr/lib/gcc/x86_64-linux-gnu/13' would be chosen over '/usr/lib/gcc/x86_64-linux-gnu/14' [-Wgcc-install-dir-libstdcxx]
 
-Status: ❌ Failure
+Status: ✅ Success
 ```
 ```
 Test Case: test_nob_fixed_deque
@@ -174,9 +170,8 @@ Status: ✅ Success
 Test Case: test_nob_hash
 Target: x86_64-linux-gnu
 Errors:
-zig: warning: future releases of the clang compiler will prefer GCC installations containing libstdc++ include directories; '/usr/lib/gcc/x86_64-linux-gnu/13' would be chosen over '/usr/lib/gcc/x86_64-linux-gnu/14' [-Wgcc-install-dir-libstdcxx]
 
-Status: ❌ Failure
+Status: ✅ Success
 ```
 ```
 Test Case: test_nob_hash
@@ -217,9 +212,8 @@ Status: ✅ Success
 Test Case: test_nob_ht
 Target: x86_64-linux-gnu
 Errors:
-zig: warning: future releases of the clang compiler will prefer GCC installations containing libstdc++ include directories; '/usr/lib/gcc/x86_64-linux-gnu/13' would be chosen over '/usr/lib/gcc/x86_64-linux-gnu/14' [-Wgcc-install-dir-libstdcxx]
 
-Status: ❌ Failure
+Status: ✅ Success
 ```
 ```
 Test Case: test_nob_ht
@@ -260,9 +254,8 @@ Status: ✅ Success
 Test Case: test_nob_ilist
 Target: x86_64-linux-gnu
 Errors:
-zig: warning: future releases of the clang compiler will prefer GCC installations containing libstdc++ include directories; '/usr/lib/gcc/x86_64-linux-gnu/13' would be chosen over '/usr/lib/gcc/x86_64-linux-gnu/14' [-Wgcc-install-dir-libstdcxx]
 
-Status: ❌ Failure
+Status: ✅ Success
 ```
 ```
 Test Case: test_nob_ilist
@@ -303,9 +296,8 @@ Status: ✅ Success
 Test Case: test_nob_entity
 Target: x86_64-linux-gnu
 Errors:
-zig: warning: future releases of the clang compiler will prefer GCC installations containing libstdc++ include directories; '/usr/lib/gcc/x86_64-linux-gnu/13' would be chosen over '/usr/lib/gcc/x86_64-linux-gnu/14' [-Wgcc-install-dir-libstdcxx]
 
-Status: ❌ Failure
+Status: ✅ Success
 ```
 ```
 Test Case: test_nob_entity
@@ -346,9 +338,8 @@ Status: ✅ Success
 Test Case: test_nob_graph
 Target: x86_64-linux-gnu
 Errors:
-zig: warning: future releases of the clang compiler will prefer GCC installations containing libstdc++ include directories; '/usr/lib/gcc/x86_64-linux-gnu/13' would be chosen over '/usr/lib/gcc/x86_64-linux-gnu/14' [-Wgcc-install-dir-libstdcxx]
 
-Status: ❌ Failure
+Status: ✅ Success
 ```
 ```
 Test Case: test_nob_graph
@@ -389,9 +380,8 @@ Status: ✅ Success
 Test Case: test_nob_rc
 Target: x86_64-linux-gnu
 Errors:
-zig: warning: future releases of the clang compiler will prefer GCC installations containing libstdc++ include directories; '/usr/lib/gcc/x86_64-linux-gnu/13' would be chosen over '/usr/lib/gcc/x86_64-linux-gnu/14' [-Wgcc-install-dir-libstdcxx]
 
-Status: ❌ Failure
+Status: ✅ Success
 ```
 ```
 Test Case: test_nob_rc
@@ -432,9 +422,8 @@ Status: ✅ Success
 Test Case: test_nob_br
 Target: x86_64-linux-gnu
 Errors:
-zig: warning: future releases of the clang compiler will prefer GCC installations containing libstdc++ include directories; '/usr/lib/gcc/x86_64-linux-gnu/13' would be chosen over '/usr/lib/gcc/x86_64-linux-gnu/14' [-Wgcc-install-dir-libstdcxx]
 
-Status: ❌ Failure
+Status: ✅ Success
 ```
 ```
 Test Case: test_nob_br
@@ -491,9 +480,8 @@ Status: ❌ Failure
 Test Case: test_nob_jsonrpc
 Target: x86_64-linux-gnu
 Errors:
-zig: warning: future releases of the clang compiler will prefer GCC installations containing libstdc++ include directories; '/usr/lib/gcc/x86_64-linux-gnu/13' would be chosen over '/usr/lib/gcc/x86_64-linux-gnu/14' [-Wgcc-install-dir-libstdcxx]
 
-Status: ❌ Failure
+Status: ✅ Success
 ```
 ```
 Test Case: test_nob_jsonrpc
@@ -534,9 +522,8 @@ Status: ✅ Success
 Test Case: test_nob_mcp
 Target: x86_64-linux-gnu
 Errors:
-zig: warning: future releases of the clang compiler will prefer GCC installations containing libstdc++ include directories; '/usr/lib/gcc/x86_64-linux-gnu/13' would be chosen over '/usr/lib/gcc/x86_64-linux-gnu/14' [-Wgcc-install-dir-libstdcxx]
 
-Status: ❌ Failure
+Status: ✅ Success
 ```
 ```
 Test Case: test_nob_mcp
@@ -585,9 +572,8 @@ Status: ❌ Failure
 Test Case: test_nob_channels
 Target: x86_64-linux-gnu
 Errors:
-zig: warning: future releases of the clang compiler will prefer GCC installations containing libstdc++ include directories; '/usr/lib/gcc/x86_64-linux-gnu/13' would be chosen over '/usr/lib/gcc/x86_64-linux-gnu/14' [-Wgcc-install-dir-libstdcxx]
 
-Status: ❌ Failure
+Status: ✅ Success
 ```
 ```
 Test Case: test_nob_channels
@@ -628,9 +614,8 @@ Status: ✅ Success
 Test Case: test_nob_profiler
 Target: x86_64-linux-gnu
 Errors:
-zig: warning: future releases of the clang compiler will prefer GCC installations containing libstdc++ include directories; '/usr/lib/gcc/x86_64-linux-gnu/13' would be chosen over '/usr/lib/gcc/x86_64-linux-gnu/14' [-Wgcc-install-dir-libstdcxx]
 
-Status: ❌ Failure
+Status: ✅ Success
 ```
 ```
 Test Case: test_nob_profiler
@@ -966,9 +951,8 @@ Status: ❌ Failure
 Test Case: test_nob_profile_da_vs_deque
 Target: x86_64-linux-gnu
 Errors:
-zig: warning: future releases of the clang compiler will prefer GCC installations containing libstdc++ include directories; '/usr/lib/gcc/x86_64-linux-gnu/13' would be chosen over '/usr/lib/gcc/x86_64-linux-gnu/14' [-Wgcc-install-dir-libstdcxx]
 
-Status: ❌ Failure
+Status: ✅ Success
 ```
 ```
 Test Case: test_nob_profile_da_vs_deque
@@ -1312,9 +1296,8 @@ Status: ❌ Failure
 Test Case: test_nob_profile_alloc_huge_page
 Target: x86_64-linux-gnu
 Errors:
-zig: warning: future releases of the clang compiler will prefer GCC installations containing libstdc++ include directories; '/usr/lib/gcc/x86_64-linux-gnu/13' would be chosen over '/usr/lib/gcc/x86_64-linux-gnu/14' [-Wgcc-install-dir-libstdcxx]
 
-Status: ❌ Failure
+Status: ✅ Success
 ```
 ```
 Test Case: test_nob_profile_alloc_huge_page
@@ -1667,9 +1650,8 @@ Status: ❌ Failure
 Test Case: test_nob_profile_fp_div_vs_fp_mul
 Target: x86_64-linux-gnu
 Errors:
-zig: warning: future releases of the clang compiler will prefer GCC installations containing libstdc++ include directories; '/usr/lib/gcc/x86_64-linux-gnu/13' would be chosen over '/usr/lib/gcc/x86_64-linux-gnu/14' [-Wgcc-install-dir-libstdcxx]
 
-Status: ❌ Failure
+Status: ✅ Success
 ```
 ```
 Test Case: test_nob_profile_fp_div_vs_fp_mul
@@ -2013,9 +1995,8 @@ Status: ❌ Failure
 Test Case: test_nob_profile_int_div_vs_int_mul
 Target: x86_64-linux-gnu
 Errors:
-zig: warning: future releases of the clang compiler will prefer GCC installations containing libstdc++ include directories; '/usr/lib/gcc/x86_64-linux-gnu/13' would be chosen over '/usr/lib/gcc/x86_64-linux-gnu/14' [-Wgcc-install-dir-libstdcxx]
 
-Status: ❌ Failure
+Status: ✅ Success
 ```
 ```
 Test Case: test_nob_profile_int_div_vs_int_mul
@@ -2409,9 +2390,8 @@ Status: ❌ Failure
 Test Case: test_nob_prime
 Target: x86_64-linux-gnu
 Errors:
-zig: warning: future releases of the clang compiler will prefer GCC installations containing libstdc++ include directories; '/usr/lib/gcc/x86_64-linux-gnu/13' would be chosen over '/usr/lib/gcc/x86_64-linux-gnu/14' [-Wgcc-install-dir-libstdcxx]
 
-Status: ❌ Failure
+Status: ✅ Success
 ```
 ```
 Test Case: test_nob_prime
@@ -2452,9 +2432,8 @@ Status: ✅ Success
 Test Case: test_nob_shuffle
 Target: x86_64-linux-gnu
 Errors:
-zig: warning: future releases of the clang compiler will prefer GCC installations containing libstdc++ include directories; '/usr/lib/gcc/x86_64-linux-gnu/13' would be chosen over '/usr/lib/gcc/x86_64-linux-gnu/14' [-Wgcc-install-dir-libstdcxx]
 
-Status: ❌ Failure
+Status: ✅ Success
 ```
 ```
 Test Case: test_nob_shuffle

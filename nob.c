@@ -23,7 +23,7 @@ const char *OS_NAMES[] = {
 static_assert(ARRAY_LEN(OS_NAMES) == __count_OS, "Implement for missing OS!");
 
 typedef enum {
-   X86_64, 
+   X86_64,
    ARM64,
    __count_ARCH,
 } ARCH;
@@ -123,7 +123,7 @@ bool build(bool always_build) {
                         "-I./thirdparty", "-I./src",
                         "-O1",\
                         "-Wall", "-Wextra", "-Werror", "-Wswitch-enum",
-                        "-Wno-unused-variable", "-Wno-unused-but-set-variable", "-Wno-format", "-Wno-error=gcc-install-dir-libstdcxx", // TODO: fix these warning errors
+                        "-Wno-unused-variable", "-Wno-unused-but-set-variable", "-Wno-format", // TODO: fix these warning errors
                         "-ggdb",
                         "-o", output_path,
                         test_case.source_files[0]
