@@ -72,6 +72,7 @@ Test_Case test_cases[] = {
     mk_test(test_nob_bisect                    , false, "src/nob_bisect.h"),
     mk_test(test_nob_prime                     , false, "src/nob_bisect.h", "src/nob_prime.h"),
     mk_test(test_nob_shuffle                   , false, "src/nob_bisect.h", "src/nob_prime.h", "src/nob_shuffle.h"),
+    mk_test(test_num_defs                      , false, "src/num_defs.h"),
 };
 
 typedef struct {
