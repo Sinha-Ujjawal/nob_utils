@@ -3,6 +3,9 @@
 #define NOB_IMPLEMENTATION
 #include "thirdparty/nob.h"
 
+#define NOB_EXT_IMPLEMENTATION
+#include "src/nob_ext.h"
+
 #define BUILD "build"
 #define BUILD_REPORT_PATH "./build_report.md"
 
@@ -10,28 +13,30 @@ Cmd cmd = {0};
 Procs procs = {0};
 
 typedef enum {
-    LINUX,
-    MACOS,
-    WINDOWS,
-    __count_OS,
+    LINUX   = (1 << 0),
+    MACOS   = (1 << 1),
+    WINDOWS = (1 << 2),
 } OS;
 const char *OS_NAMES[] = {
     "linux-gnu",
     "macos-none",
     "windows-gnu",
 };
-static_assert(ARRAY_LEN(OS_NAMES) == __count_OS, "Implement for missing OS!");
+static_assert(ARRAY_LEN(OS_NAMES) == 3, "Implement for missing OS!");
+const size_t ALL_OS = LINUX | MACOS | WINDOWS;
 
 typedef enum {
-   X86_64,
-   ARM64,
-   __count_ARCH,
+   X86_64 = (1 << 0),
+   ARM64  = (1 << 1),
 } ARCH;
 const char *ARCH_NAMES[] = {
     "x86_64",
     "aarch64",
 };
-static_assert(ARRAY_LEN(ARCH_NAMES) == __count_ARCH, "Implement for missing ARCH!");
+static_assert(ARRAY_LEN(ARCH_NAMES) == 2, "Implement for missing ARCH!");
+const size_t ALL_ARCH = X86_64 | ARM64;
+
+static_assert((ARRAY_LEN(OS_NAMES) * ARRAY_LEN(ARCH_NAMES)) <= sizeof(size_t), "size_t cannot hold the possible enumerations of os x architectures!");
 
 typedef struct {
     char const* exec_name;
@@ -40,57 +45,55 @@ typedef struct {
     bool build;
     bool run;
     bool needs_explicit_run;
+    size_t supported_os;
+    size_t supported_arch;
+    struct {
+        size_t done;
+        size_t failed;
+    } build_status;
 } Test_Case;
 
-#define mk_test(name, explicit, ...) {                                                       \
+#define mk_test(name, supported_os_, supported_arch_, explicit, ...) {                       \
     .exec_name = #name,                                                                      \
     .source_files = (char const*[]){ "tests/" #name ".c", "thirdparty/nob.h", __VA_ARGS__ }, \
     .num_source_files = 2 + (sizeof((char const*[]){ __VA_ARGS__ }) / sizeof(char const*)),  \
     .needs_explicit_run  = (explicit),                                                       \
+    .supported_os = (supported_os_),                                                         \
+    .supported_arch = (supported_arch_),                                                     \
 }
 
 Test_Case test_cases[] = {
-    mk_test(test_nob_fa                        , false, "src/nob_fa.h"),
-    mk_test(test_nob_heapq                     , false, "src/nob_heapq.h"),
-    mk_test(test_nob_deque                     , false, "src/nob_deque.h"),
-    mk_test(test_nob_fixed_deque               , false, "src/nob_fixed_deque.h"),
-    mk_test(test_nob_hash                      , false, "src/nob_hash.h"),
-    mk_test(test_nob_ht                        , false, "src/nob_ht.h", "src/nob_hash.h"),
-    mk_test(test_nob_ilist                     , false, "src/nob_ilist.h"),
-    mk_test(test_nob_entity                    , false, "src/nob_entity.h", "src/nob_ilist.h"),
-    mk_test(test_nob_graph                     , false, "src/nob_graph.h", "src/nob_deque.h", "src/nob_ht.h", "src/nob_hash.h"),
-    mk_test(test_nob_rc                        , false, "src/nob_rc.h"),
-    mk_test(test_nob_br                        , false, "src/nob_br.h"),
-    mk_test(test_nob_jsonrpc                   , false, "src/nob_jsonrpc.h", "thirdparty/jim.h", "thirdparty/jimp.h"),
-    mk_test(test_nob_mcp                       , false, "src/nob_mcp.h", "src/nob_jsonrpc.h", "thirdparty/jim.h", "thirdparty/jimp.h"),
-    mk_test(test_nob_channels                  , false, "src/nob_channels.h", "src/nob_deque.h", "src/nob_fixed_deque.h"),
-    mk_test(test_nob_profiler                  , true , "src/nob_profiler.h"),
-    mk_test(test_nob_profile_da_vs_deque       , true , "src/nob_profiler.h", "src/nob_fa.h", "src/nob_deque.h"),
-    mk_test(test_nob_profile_alloc_huge_page   , true , "src/nob_profiler.h", "src/nob_fa.h", "src/nob_huge_page_alloc.h"),
-    mk_test(test_nob_profile_fp_div_vs_fp_mul  , true , "src/nob_profiler.h"),
-    mk_test(test_nob_profile_int_div_vs_int_mul, true , "src/nob_profiler.h"),
-    mk_test(test_nob_bisect                    , false, "src/nob_bisect.h"),
-    mk_test(test_nob_prime                     , false, "src/nob_bisect.h", "src/nob_prime.h"),
-    mk_test(test_nob_shuffle                   , false, "src/nob_bisect.h", "src/nob_prime.h", "src/nob_shuffle.h"),
-    mk_test(test_num_defs                      , false, "src/num_defs.h"),
+    mk_test(test_nob_fa                        , ALL_OS       , ALL_ARCH, false, "src/nob_fa.h"),
+    mk_test(test_nob_heapq                     , ALL_OS       , ALL_ARCH, false, "src/nob_heapq.h"),
+    mk_test(test_nob_deque                     , ALL_OS       , ALL_ARCH, false, "src/nob_deque.h"),
+    mk_test(test_nob_fixed_deque               , ALL_OS       , ALL_ARCH, false, "src/nob_fixed_deque.h"),
+    mk_test(test_nob_hash                      , ALL_OS       , ALL_ARCH, false, "src/nob_hash.h"),
+    mk_test(test_nob_ht                        , ALL_OS       , ALL_ARCH, false, "src/nob_ht.h", "src/nob_hash.h"),
+    mk_test(test_nob_ilist                     , ALL_OS       , ALL_ARCH, false, "src/nob_ilist.h"),
+    mk_test(test_nob_entity                    , ALL_OS       , ALL_ARCH, false, "src/nob_entity.h", "src/nob_ilist.h"),
+    mk_test(test_nob_graph                     , ALL_OS       , ALL_ARCH, false, "src/nob_graph.h", "src/nob_deque.h", "src/nob_ht.h", "src/nob_hash.h"),
+    mk_test(test_nob_rc                        , ALL_OS       , ALL_ARCH, false, "src/nob_rc.h"),
+    mk_test(test_nob_br                        , LINUX | MACOS, ALL_ARCH, false, "src/nob_br.h"),
+    mk_test(test_nob_jsonrpc                   , ALL_OS       , ALL_ARCH, false, "src/nob_jsonrpc.h", "thirdparty/jim.h", "thirdparty/jimp.h"),
+    mk_test(test_nob_mcp                       , LINUX | MACOS, ALL_ARCH, false, "src/nob_mcp.h", "src/nob_jsonrpc.h", "thirdparty/jim.h", "thirdparty/jimp.h"),
+    mk_test(test_nob_channels                  , ALL_OS       , ALL_ARCH, false, "src/nob_channels.h", "src/nob_deque.h", "src/nob_fixed_deque.h"),
+    mk_test(test_nob_profiler                  , ALL_OS       , X86_64  , true , "src/nob_profiler.h"),
+    mk_test(test_nob_profile_da_vs_deque       , ALL_OS       , X86_64  , true , "src/nob_profiler.h", "src/nob_fa.h", "src/nob_deque.h"),
+    mk_test(test_nob_profile_alloc_huge_page   , ALL_OS       , X86_64  , true , "src/nob_profiler.h", "src/nob_fa.h", "src/nob_huge_page_alloc.h"),
+    mk_test(test_nob_profile_fp_div_vs_fp_mul  , ALL_OS       , X86_64  , true , "src/nob_profiler.h"),
+    mk_test(test_nob_profile_int_div_vs_int_mul, ALL_OS       , X86_64  , true , "src/nob_profiler.h"),
+    mk_test(test_nob_bisect                    , ALL_OS       , ALL_ARCH, false, "src/nob_bisect.h"),
+    mk_test(test_nob_prime                     , ALL_OS       , ALL_ARCH, false, "src/nob_bisect.h", "src/nob_prime.h"),
+    mk_test(test_nob_shuffle                   , ALL_OS       , ALL_ARCH, false, "src/nob_bisect.h", "src/nob_prime.h", "src/nob_shuffle.h"),
+    mk_test(test_num_defs                      , ALL_OS       , ALL_ARCH, false, "src/num_defs.h"),
 };
-
-typedef struct {
-    const char *test_case_name;
-    ARCH arch;
-    OS os;
-} Test_Case_Build_Result;
 
 #define get_target(arch, os) temp_sprintf("%s-%s", ARCH_NAMES[arch], OS_NAMES[os]);
 #define get_target_dir(arch, os) temp_sprintf(BUILD"/%s-%s", ARCH_NAMES[arch], OS_NAMES[os]);
 
-bool build(bool always_build) {
-    struct {
-        Test_Case_Build_Result *items;
-        size_t count;
-        size_t capacity;
-    } test_case_build_results = {0};
-    String_Builder sb = {0};
+bool build() {
+    String_Builder test_results_summary = {0};
+    String_Builder test_results_detail = {0};
     bool result = false;
 #define get_build_paths(test_case_name, arch, os, target, output_path, stdout_path, stderr_path) \
     do {                                                                          \
@@ -99,69 +102,124 @@ bool build(bool always_build) {
         stdout_path = temp_sprintf(BUILD"/%s/%s.stdout", target, test_case_name); \
         stderr_path = temp_sprintf(BUILD"/%s/%s.stderr", target, test_case_name); \
     } while(0)
-    for (size_t i = 0; i < ARRAY_LEN(test_cases); i++) {
-        Test_Case test_case = test_cases[i];
-        if (!test_case.build) continue;
-        assert(test_case.num_source_files > 0);
-        int rebuild_is_needed = 0;
-        if (always_build) {
-            rebuild_is_needed = 1;
-        } else {
-            rebuild_is_needed = needs_rebuild(test_case.exec_name, test_case.source_files, test_case.num_source_files);
-        }
-        if (rebuild_is_needed > 0) {
-            for (size_t arch = 0; arch < __count_ARCH; arch++) {
-                for (size_t os = 0; os < __count_OS; os++) {
-                    size_t saved = temp_save();
-                    const char *target = NULL;
-                    const char *output_path = NULL;
-                    const char *stdout_path = NULL;
-                    const char *stderr_path = NULL;
-                    get_build_paths(test_case.exec_name, arch, os, target, output_path, stdout_path, stderr_path);
-                    cmd_append(&cmd,
-                        "zig", "cc",
-                        "-target", target,
-                        "-I./thirdparty", "-I./src",
-                        "-O1",\
-                        "-Wall", "-Wextra", "-Werror", "-Wswitch-enum",
-                        "-Wno-unused-variable", "-Wno-unused-but-set-variable", "-Wno-format", // TODO: fix these warning errors
-                        "-ggdb",
-                        "-o", output_path,
-                        test_case.source_files[0]
-                    );
-                    cmd_run(&cmd, .async = &procs, .max_procs = ARRAY_LEN(test_cases) * __count_OS * __count_ARCH, .stdout_path=stdout_path, .stderr_path=stderr_path);
-                    temp_rewind(saved);
-                    da_append(&test_case_build_results, ((Test_Case_Build_Result) {
-                        .test_case_name = test_case.exec_name,
-                        .arch = arch,
-                        .os = os,
-                    }));
+    for (size_t test_case_idx = 0; test_case_idx < ARRAY_LEN(test_cases); test_case_idx++) {
+        Test_Case *test_case = &test_cases[test_case_idx];
+        if (!test_case->build) continue;
+        assert(test_case->num_source_files > 0);
+        for (size_t arch = 0; arch < ARRAY_LEN(ARCH_NAMES); arch++) {
+            if (!(test_case->supported_arch & (1 << arch))) {
+                nob_log(INFO, "%s not supported for %s Architecture!", test_case->exec_name, ARCH_NAMES[arch]);
+                continue;
+            }
+            for (size_t os = 0; os < ARRAY_LEN(OS_NAMES); os++) {
+                if (!(test_case->supported_os & (1 << os))) {
+                    nob_log(INFO, "%s not supported for %s OS!", test_case->exec_name, OS_NAMES[os]);
+                    continue;
                 }
+                size_t build_status_idx = arch*ARRAY_LEN(OS_NAMES) + os;
+                size_t saved = temp_save();
+                const char *target = NULL;
+                const char *output_path = NULL;
+                const char *stdout_path = NULL;
+                const char *stderr_path = NULL;
+                get_build_paths(test_case->exec_name, arch, os, target, output_path, stdout_path, stderr_path);
+                cmd_append(&cmd,
+                    "zig", "cc",
+                    "-target", target,
+                    "-I./thirdparty", "-I./src",
+                    "-O1",\
+                    "-Wall", "-Wextra", "-Werror", "-Wswitch-enum",
+                    "-Wno-unused-variable", "-Wno-unused-but-set-variable", "-Wno-format", // TODO: fix these warning errors
+                    "-ggdb",
+                    "-o", output_path,
+                    test_case->source_files[0]
+                );
+                cmd_run(&cmd, .async = &procs, .max_procs = ARRAY_LEN(test_cases) * ARRAY_LEN(OS_NAMES) * ARRAY_LEN(ARCH_NAMES), .stdout_path=stdout_path, .stderr_path=stderr_path);
+                temp_rewind(saved);
             }
         }
     }
     procs_flush(&procs);
     result = true;
-    sb.count = 0;
-    da_foreach(Test_Case_Build_Result, it, &test_case_build_results) {
-        size_t saved = temp_save();
-        const char *target = NULL;
-        const char *output_path = NULL;
-        const char *stdout_path = NULL;
-        const char *stderr_path = NULL;
-        get_build_paths(it->test_case_name, it->arch, it->os, target, output_path, stdout_path, stderr_path);
-        sb_appendf(&sb, "```\nTest Case: %s\nTarget: %s\nErrors:\n", it->test_case_name, target);
-        size_t count_before = sb.count;
-        if (!read_entire_file(stderr_path, &sb)) return_defer(false);
-        bool test_result = sb.count == count_before;
-        result = test_result && result;
-        temp_rewind(saved);
-        sb_appendf(&sb, "\nStatus: %s\n```\n", test_result ? "✅ Success" : "❌ Failure");
+    // Writing Test Results Detail
+    test_results_detail.count = 0;
+    for (size_t test_case_idx = 0; test_case_idx < ARRAY_LEN(test_cases); test_case_idx++) {
+        Test_Case *test_case = &test_cases[test_case_idx];
+        for (size_t arch = 0; arch < ARRAY_LEN(ARCH_NAMES); arch++) {
+            if (!(test_case->supported_arch & (1 << arch))) {
+                continue;
+            }
+            for (size_t os = 0; os < ARRAY_LEN(OS_NAMES); os++) {
+                if (!(test_case->supported_os & (1 << os))) {
+                    continue;
+                }
+                size_t build_status_idx = arch*ARRAY_LEN(OS_NAMES) + os;
+                size_t saved = temp_save();
+                const char *target = NULL;
+                const char *output_path = NULL;
+                const char *stdout_path = NULL;
+                const char *stderr_path = NULL;
+                get_build_paths(test_case->exec_name, arch, os, target, output_path, stdout_path, stderr_path);
+                sb_appendf(&test_results_detail, "```\nTest Case: %s\nTarget: %s\nErrors:\n", test_case->exec_name, target);
+                size_t count_before = test_results_detail.count;
+                if (!read_entire_file(stderr_path, &test_results_detail)) return_defer(false);
+                bool test_result = test_results_detail.count == count_before;
+                result = test_result && result;
+                temp_rewind(saved);
+                sb_appendf(&test_results_detail, "\nStatus: %s\n```\n", test_result ? "✅ Success" : "❌ Failure");
+                test_case->build_status.done |= 1 << build_status_idx;
+                test_case->build_status.failed |= (!test_result) << build_status_idx;
+            }
+        }
     }
-    if (!write_entire_file(BUILD_REPORT_PATH, sb.items, sb.count)) return_defer(false);
+    // Writing Test Results Summary
+    test_results_summary.count = 0;
+    /// Header
+    sb_append_cstr(&test_results_summary, "|test_case|");
+    for (size_t arch = 0; arch < ARRAY_LEN(ARCH_NAMES); arch++) {
+        for (size_t os = 0; os < ARRAY_LEN(OS_NAMES); os++) {
+            sb_appendf(&test_results_summary, "%s-%s|", ARCH_NAMES[arch], OS_NAMES[os]);
+        }
+    }
+    sb_append_cstr(&test_results_summary, "\n|---|");
+    for (size_t arch = 0; arch < ARRAY_LEN(ARCH_NAMES); arch++) {
+        for (size_t os = 0; os < ARRAY_LEN(OS_NAMES); os++) {
+            sb_append_cstr(&test_results_summary, "---|");
+        }
+    }
+    sb_append_cstr(&test_results_summary, "\n");
+    for (size_t test_case_idx = 0; test_case_idx < ARRAY_LEN(test_cases); test_case_idx++) {
+        Test_Case *test_case = &test_cases[test_case_idx];
+        sb_appendf(&test_results_summary, "|%s|", test_case->exec_name);
+        for (size_t arch = 0; arch < ARRAY_LEN(ARCH_NAMES); arch++) {
+            bool arch_supported = true;
+            if (!(test_case->supported_arch & (1 << arch))) {
+                arch_supported = false;
+            }
+            for (size_t os = 0; os < ARRAY_LEN(OS_NAMES); os++) {
+                bool os_supported = true;
+                if (arch_supported && !(test_case->supported_os & (1 << os))) {
+                    os_supported = false;
+                }
+                bool supported = arch_supported && os_supported;
+                size_t build_status_idx = arch*ARRAY_LEN(OS_NAMES) + os;
+                if (!supported) {
+                    sb_append_cstr(&test_results_summary, "🚫 Not-Supported|");
+                } else {
+                    assert(test_case->build_status.done & (1 << build_status_idx));
+                    bool test_result = !(test_case->build_status.failed & (1 << build_status_idx));
+                    sb_append_cstr(&test_results_summary, test_result ? "✅ Success|" : "❌ Failure|");
+                }
+            }
+        }
+        sb_append_cstr(&test_results_summary, "\n");
+    }
+    sb_append_cstr(&test_results_summary, "\n");
+    if (!write_entire_file(BUILD_REPORT_PATH, test_results_summary.items, test_results_summary.count)) return_defer(false);
+    if (!append_to_file(BUILD_REPORT_PATH, test_results_detail.items, test_results_detail.count)) return_defer(false);
 defer:
-    free(test_case_build_results.items);
-    free(sb.items);
+    free(test_results_summary.items);
+    free(test_results_detail.items);
     return result;
 }
 
@@ -183,8 +241,8 @@ int main(int argc, char **argv) {
     GO_REBUILD_URSELF(argc, argv);
     int result = 1;
     if (!mkdir_if_not_exists(BUILD)) return_defer(1);
-    for (size_t arch = 0; arch < __count_ARCH; arch++) {
-        for (size_t os = 0; os < __count_OS; os++) {
+    for (size_t arch = 0; arch < ARRAY_LEN(ARCH_NAMES); arch++) {
+        for (size_t os = 0; os < ARRAY_LEN(OS_NAMES); os++) {
             size_t saved = temp_save();
             const char *target_dir = get_target_dir(arch, os);
             if (!mkdir_if_not_exists(target_dir)) return_defer(1);
@@ -196,12 +254,11 @@ int main(int argc, char **argv) {
 
     #define USAGE                                                                                                                \
         do {                                                                                                                     \
-            nob_log(INFO, "Usage: %s <sub-command> [-f] [test-cases...]", program);                                              \
+            nob_log(INFO, "Usage: %s <sub-command> [test-cases...]", program);                                              \
             nob_log(INFO, "SUBCOMMANDS:");                                                                                       \
             nob_log(INFO, "  build: Only builds the test cases");                                                                \
             nob_log(INFO, "  run:   Builds and run the test cases");                                                             \
             nob_log(INFO, "  help:  Prints this help message");                                                                  \
-            nob_log(INFO, "-f: Will forcefully build the test-files");                                                           \
             nob_log(INFO, "test-cases: Lets you chose which test-cases to build");                                               \
             nob_log(INFO, "  Available test-cases");                                                                             \
             for (size_t i = 0; i < ARRAY_LEN(test_cases); i++) {                                                                 \
@@ -217,15 +274,10 @@ int main(int argc, char **argv) {
     }
 
     char const* subcommand = shift(argv, argc);
-    bool always_build = false;
     bool any_test_cases_provided = false;
 
     while (argc > 0) {
         char const* opt = shift(argv, argc);
-        if (strcmp(opt, "-f") == 0) {
-            always_build = true;
-            continue;
-        }
         any_test_cases_provided = true;
         bool found = false;
         for (size_t i = 0; i < ARRAY_LEN(test_cases); i++) {
@@ -251,9 +303,9 @@ int main(int argc, char **argv) {
     }
 
     if (strcmp(subcommand, "build") == 0) {
-        if (!build(always_build)) return_defer(1);
+        if (!build()) return_defer(1);
     } else if (strcmp(subcommand, "run") == 0) {
-        if (!build(always_build)) return_defer(1);
+        if (!build()) return_defer(1);
         if (!run()) return_defer(1);
     } else if (strcmp(subcommand, "help") == 0) {
         USAGE;

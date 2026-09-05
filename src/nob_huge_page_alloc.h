@@ -38,7 +38,11 @@ size_t nob_get_system_huge_page_size() {
 #elif defined(__linux__)
     return 2 * 1024 * 1024;
 #elif defined(__APPLE__)
-    return VM_FLAGS_SUPERPAGE_SIZE_2MB ? (2 * 1024 * 1024) : 0;
+    #ifdef VM_FLAGS_SUPERPAGE_SIZE_2MB
+        return 2 * 1024 * 1024;
+    #elif
+        return 0;
+    #endif // VM_FLAGS_SUPERPAGE_SIZE_2MB
 #else
     return 0;
 #endif

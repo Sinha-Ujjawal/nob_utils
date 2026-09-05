@@ -27,7 +27,11 @@ size_t nob_next_prime_ge(size_t x);
 
 Nob__Primes nob__primes = {0};
 
+#if _WIN32
+int nob__lte_for_size_t(void *arg, const void *p1, const void *p2) {
+#else
 int nob__lte_for_size_t(const void *p1, const void *p2, void *arg) {
+#endif
     NOB_UNUSED(arg);
     size_t v1 = *((size_t *) p1);
     size_t v2 = *((size_t *) p2);

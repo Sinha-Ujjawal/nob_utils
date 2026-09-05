@@ -5,13 +5,20 @@
 // References:
 // - https://docs.python.org/3.13/library/bisect.html
 // - https://github.com/python/cpython/blob/3.13/Lib/bisect.py
+//
+// NOTE that the order of arguments to compar is different between Windows and *nix.
+// This was done to align differences between Windows's qsort_s vs. *nix qsort_r
 
 // The return value i is such that all e in a[:i] have e < x, and all e in
 // a[i:] have e >= x.  So if x already appears in the list, a.insert(i, x) will
 // insert just before the leftmost x already there.
 size_t nob_bisect_left(
     const void *base, size_t nmemb, size_t size, const void *x,
+#if _WIN32
+    int (*compar)(void *, const void *, const void *),
+#else
     int (*compar)(const void *, const void *, void *),
+#endif
     void *arg);
 
 // The return value i is such that all e in a[:i] have e <= x, and all e in
@@ -19,42 +26,66 @@ size_t nob_bisect_left(
 // insert just after the rightmost x already there.
 size_t nob_bisect_right(
     const void *base, size_t nmemb, size_t size, const void *x,
+#if _WIN32
+    int (*compar)(void *, const void *, const void *),
+#else
     int (*compar)(const void *, const void *, void *),
+#endif
     void *arg);
 
 // Locate the leftmost value exactly equal to x
 // If not found, then return -1
 int nob_bisect_index(
     const void *base, size_t nmemb, size_t size, const void *x,
+#if _WIN32
+    int (*compar)(void *, const void *, const void *),
+#else
     int (*compar)(const void *, const void *, void *),
+#endif
     void *arg);
 
 // Find rightmost value less than x
 // Returns the pointer to the element if found, otherwise returns NULL
 const void * nob_bisect_find_lt(
     const void *base, size_t nmemb, size_t size, const void *x,
+#if _WIN32
+    int (*compar)(void *, const void *, const void *),
+#else
     int (*compar)(const void *, const void *, void *),
+#endif
     void *arg);
 
 // Find rightmost value less than or equal to x
 // Returns the pointer to the element if found, otherwise returns NULL
 const void * nob_bisect_find_le(
     const void *base, size_t nmemb, size_t size, const void *x,
+#if _WIN32
+    int (*compar)(void *, const void *, const void *),
+#else
     int (*compar)(const void *, const void *, void *),
+#endif
     void *arg);
 
 // Find leftmost value greater than x
 // Returns the pointer to the element if found, otherwise returns NULL
 const void * nob_bisect_find_gt(
     const void *base, size_t nmemb, size_t size, const void *x,
+#if _WIN32
+    int (*compar)(void *, const void *, const void *),
+#else
     int (*compar)(const void *, const void *, void *),
+#endif
     void *arg);
 
 // Find leftmost value greater than or equal to x
 // Returns the pointer to the element if found, otherwise returns NULL
 const void * nob_bisect_find_ge(
     const void *base, size_t nmemb, size_t size, const void *x,
+#if _WIN32
+    int (*compar)(void *, const void *, const void *),
+#else
     int (*compar)(const void *, const void *, void *),
+#endif
     void *arg);
 
 #endif // NOB_BISECT_H_
@@ -64,13 +95,21 @@ const void * nob_bisect_find_ge(
 // Index algorithms
 size_t nob_bisect_left(
     const void *base, size_t nmemb, size_t size, const void *x,
+#if _WIN32
+    int (*compar)(void *, const void *, const void *),
+#else
     int (*compar)(const void *, const void *, void *),
+#endif
     void *arg) {
     size_t lo = 0;
     size_t hi = nmemb;
     while (lo < hi) {
         size_t mid = lo + ((hi - lo) >> 1);
+#if _WIN32
+        if (compar(arg, base + (mid*size), x) < 0) {
+#else
         if (compar(base + (mid*size), x, arg) < 0) {
+#endif
             lo = mid + 1;
         } else {
             hi = mid;
@@ -81,13 +120,21 @@ size_t nob_bisect_left(
 
 size_t nob_bisect_right(
     const void *base, size_t nmemb, size_t size, const void *x,
+#if _WIN32
+    int (*compar)(void *, const void *, const void *),
+#else
     int (*compar)(const void *, const void *, void *),
+#endif
     void *arg) {
     size_t lo = 0;
     size_t hi = nmemb;
     while (lo < hi) {
         size_t mid = lo + ((hi - lo) >> 1);
+#if _WIN32
+        if (compar(arg, x, base + (mid*size)) < 0) {
+#else
         if (compar(x, base + (mid*size), arg) < 0) {
+#endif
             hi = mid;
         } else {
             lo = mid + 1;
@@ -98,10 +145,18 @@ size_t nob_bisect_right(
 
 int nob_bisect_index(
     const void *base, size_t nmemb, size_t size, const void *x,
+#if _WIN32
+    int (*compar)(void *, const void *, const void *),
+#else
     int (*compar)(const void *, const void *, void *),
+#endif
     void *arg) {
     size_t i = nob_bisect_left(base, nmemb, size, x, compar, arg);
+#if _WIN32
+    if (i != nmemb && compar(arg, x, base + (i*size)) == 0) {
+#else
     if (i != nmemb && compar(x, base + (i*size), arg) == 0) {
+#endif
         return i;
     }
     return -1;
@@ -110,7 +165,11 @@ int nob_bisect_index(
 // Nearest search algorithms
 const void * nob_bisect_find_lt(
     const void *base, size_t nmemb, size_t size, const void *x,
+#if _WIN32
+    int (*compar)(void *, const void *, const void *),
+#else
     int (*compar)(const void *, const void *, void *),
+#endif
     void *arg) {
     size_t i = nob_bisect_left(base, nmemb, size, x, compar, arg);
     if (i > 0) {
@@ -121,7 +180,11 @@ const void * nob_bisect_find_lt(
 
 const void * nob_bisect_find_le(
     const void *base, size_t nmemb, size_t size, const void *x,
+#if _WIN32
+    int (*compar)(void *, const void *, const void *),
+#else
     int (*compar)(const void *, const void *, void *),
+#endif
     void *arg) {
     size_t i = nob_bisect_right(base, nmemb, size, x, compar, arg);
     if (i > 0) {
@@ -132,7 +195,11 @@ const void * nob_bisect_find_le(
 
 const void * nob_bisect_find_gt(
     const void *base, size_t nmemb, size_t size, const void *x,
+#if _WIN32
+    int (*compar)(void *, const void *, const void *),
+#else
     int (*compar)(const void *, const void *, void *),
+#endif
     void *arg) {
     size_t i = nob_bisect_right(base, nmemb, size, x, compar, arg);
     if (i != nmemb) {
@@ -143,7 +210,11 @@ const void * nob_bisect_find_gt(
 
 const void * nob_bisect_find_ge(
     const void *base, size_t nmemb, size_t size, const void *x,
+#if _WIN32
+    int (*compar)(void *, const void *, const void *),
+#else
     int (*compar)(const void *, const void *, void *),
+#endif
     void *arg) {
     size_t i = nob_bisect_left(base, nmemb, size, x, compar, arg);
     if (i != nmemb) {

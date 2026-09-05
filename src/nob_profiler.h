@@ -16,6 +16,7 @@
 typedef uint32_t u32;
 typedef uint64_t u64;
 typedef double   f64;
+typedef bool     b32;
 
 u64 nob_read_os_timer(void);
 u64 nob_get_os_timer_freq(void);

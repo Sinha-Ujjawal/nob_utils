@@ -6,7 +6,11 @@
 #define NOB_BISECT_IMPLEMENTATION
 #include "nob_bisect.h"
 
+#if _WIN32
+int is_lte_for_int(void *arg, const void *p1, const void *p2) {
+#else
 int is_lte_for_int(const void *p1, const void *p2, void *arg) {
+#endif
     UNUSED(arg);
     int v1 = *((int *) p1);
     int v2 = *((int *) p2);
@@ -15,7 +19,11 @@ int is_lte_for_int(const void *p1, const void *p2, void *arg) {
 
 int main(void) {
     int arr[5] = {5, -1, 4, 1, 3};
+#if _WIN32
+    qsort_s(&arr, ARRAY_LEN(arr), sizeof(*arr), is_lte_for_int, NULL);
+#else
     qsort_r(&arr, ARRAY_LEN(arr), sizeof(*arr), is_lte_for_int, NULL);
+#endif
     printf("Sorted Items:\n");
     for (size_t i = 0; i < ARRAY_LEN(arr); i++) {
         printf("%d\n", arr[i]);

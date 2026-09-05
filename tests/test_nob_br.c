@@ -1,5 +1,4 @@
 #define _GNU_SOURCE
-#include <sys/mman.h>
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -10,20 +9,6 @@
 #define NOB_BR_IMPLEMENTATION
 #include "nob.h"
 #include "nob_br.h"
-
-int create_mem_fd(const char *name, size_t size) {
-    // 1. Create the anonymous file in RAM
-    int fd = memfd_create(name, 0);
-    if (fd == -1) return -1;
-
-    // 2. Set the initial size (otherwise it's 0)
-    if (ftruncate(fd, size) == -1) {
-        close(fd);
-        return -1;
-    }
-
-    return fd;
-}
 
 typedef struct {
     int fdin;
