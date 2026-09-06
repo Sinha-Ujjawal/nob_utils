@@ -208,7 +208,9 @@ u64 nob_read_os_page_fault_count(void) {
 
 #else
 
+#if defined(__x86_64__) || defined(_M_X64)
 #include <x86intrin.h>
+#endif
 #include <sys/time.h>
 #include <sys/resource.h>
 
@@ -240,10 +242,22 @@ u64 nob_read_os_page_fault_count(void) {
 
 u64 nob_read_cpu_timer(void)
 {
-    // NOTE: If you were on ARM, you would need to replace __rdtsc
-    // with one of their performance counter read instructions, depending
-    // on which ones are available on your platform.
+#if defined(__x86_64__) || defined(_M_X64)
     return __rdtsc();
+#elif defined(__aarch64__) || defined(_M_ARM64)
+    #if defined(_MSC_VER)
+        // Windows on ARM64 (MSVC compiler builtin)
+        return _ReadStatusReg(ARM64_CNTVCT);
+    #else
+        // Linux / macOS (GCC / Clang inline assembly)
+        u64 val;
+        // 'isb' prevents the CPU out-of-order execution from skewing the benchmark
+        asm volatile("isb; mrs %0, cntvct_el0" : "=r" (val));
+        return val;
+    #endif
+#else
+#error "Target Architecture: Unknown / Unsupported"
+#endif
 }
 
 f64 nob_guess_timer_freq(u32 wait_time_in_millis, u64 (*timer)(void)) {

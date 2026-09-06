@@ -14,11 +14,11 @@
 |test_nob_jsonrpc|✅ Success|✅ Success|✅ Success|✅ Success|✅ Success|✅ Success|
 |test_nob_mcp|✅ Success|✅ Success|🚫 Not-Supported|✅ Success|✅ Success|🚫 Not-Supported|
 |test_nob_channels|✅ Success|✅ Success|✅ Success|✅ Success|✅ Success|✅ Success|
-|test_nob_profiler|✅ Success|✅ Success|✅ Success|🚫 Not-Supported|🚫 Not-Supported|🚫 Not-Supported|
-|test_nob_profile_da_vs_deque|✅ Success|✅ Success|✅ Success|🚫 Not-Supported|🚫 Not-Supported|🚫 Not-Supported|
-|test_nob_profile_alloc_huge_page|✅ Success|✅ Success|✅ Success|🚫 Not-Supported|🚫 Not-Supported|🚫 Not-Supported|
-|test_nob_profile_fp_div_vs_fp_mul|✅ Success|✅ Success|✅ Success|🚫 Not-Supported|🚫 Not-Supported|🚫 Not-Supported|
-|test_nob_profile_int_div_vs_int_mul|✅ Success|✅ Success|✅ Success|🚫 Not-Supported|🚫 Not-Supported|🚫 Not-Supported|
+|test_nob_profiler|✅ Success|✅ Success|✅ Success|✅ Success|✅ Success|✅ Success|
+|test_nob_profile_da_vs_deque|✅ Success|✅ Success|✅ Success|✅ Success|✅ Success|✅ Success|
+|test_nob_profile_alloc_huge_page|✅ Success|✅ Success|✅ Success|✅ Success|✅ Success|✅ Success|
+|test_nob_profile_fp_div_vs_fp_mul|✅ Success|✅ Success|✅ Success|✅ Success|✅ Success|✅ Success|
+|test_nob_profile_int_div_vs_int_mul|✅ Success|✅ Success|✅ Success|✅ Success|✅ Success|✅ Success|
 |test_nob_bisect|✅ Success|✅ Success|✅ Success|✅ Success|✅ Success|✅ Success|
 |test_nob_prime|✅ Success|✅ Success|✅ Success|✅ Success|✅ Success|✅ Success|
 |test_nob_shuffle|✅ Success|✅ Success|✅ Success|✅ Success|✅ Success|✅ Success|
@@ -606,6 +606,27 @@ Errors:
 Status: ✅ Success
 ```
 ```
+Test Case: test_nob_profiler
+Target: aarch64-linux-gnu
+Errors:
+
+Status: ✅ Success
+```
+```
+Test Case: test_nob_profiler
+Target: aarch64-macos-none
+Errors:
+
+Status: ✅ Success
+```
+```
+Test Case: test_nob_profiler
+Target: aarch64-windows-gnu
+Errors:
+
+Status: ✅ Success
+```
+```
 Test Case: test_nob_profile_da_vs_deque
 Target: x86_64-linux-gnu
 Errors:
@@ -622,6 +643,27 @@ Status: ✅ Success
 ```
 Test Case: test_nob_profile_da_vs_deque
 Target: x86_64-windows-gnu
+Errors:
+
+Status: ✅ Success
+```
+```
+Test Case: test_nob_profile_da_vs_deque
+Target: aarch64-linux-gnu
+Errors:
+
+Status: ✅ Success
+```
+```
+Test Case: test_nob_profile_da_vs_deque
+Target: aarch64-macos-none
+Errors:
+
+Status: ✅ Success
+```
+```
+Test Case: test_nob_profile_da_vs_deque
+Target: aarch64-windows-gnu
 Errors:
 
 Status: ✅ Success
@@ -648,6 +690,27 @@ Errors:
 Status: ✅ Success
 ```
 ```
+Test Case: test_nob_profile_alloc_huge_page
+Target: aarch64-linux-gnu
+Errors:
+
+Status: ✅ Success
+```
+```
+Test Case: test_nob_profile_alloc_huge_page
+Target: aarch64-macos-none
+Errors:
+
+Status: ✅ Success
+```
+```
+Test Case: test_nob_profile_alloc_huge_page
+Target: aarch64-windows-gnu
+Errors:
+
+Status: ✅ Success
+```
+```
 Test Case: test_nob_profile_fp_div_vs_fp_mul
 Target: x86_64-linux-gnu
 Errors:
@@ -669,6 +732,27 @@ Errors:
 Status: ✅ Success
 ```
 ```
+Test Case: test_nob_profile_fp_div_vs_fp_mul
+Target: aarch64-linux-gnu
+Errors:
+
+Status: ✅ Success
+```
+```
+Test Case: test_nob_profile_fp_div_vs_fp_mul
+Target: aarch64-macos-none
+Errors:
+
+Status: ✅ Success
+```
+```
+Test Case: test_nob_profile_fp_div_vs_fp_mul
+Target: aarch64-windows-gnu
+Errors:
+
+Status: ✅ Success
+```
+```
 Test Case: test_nob_profile_int_div_vs_int_mul
 Target: x86_64-linux-gnu
 Errors:
@@ -685,6 +769,27 @@ Status: ✅ Success
 ```
 Test Case: test_nob_profile_int_div_vs_int_mul
 Target: x86_64-windows-gnu
+Errors:
+
+Status: ✅ Success
+```
+```
+Test Case: test_nob_profile_int_div_vs_int_mul
+Target: aarch64-linux-gnu
+Errors:
+
+Status: ✅ Success
+```
+```
+Test Case: test_nob_profile_int_div_vs_int_mul
+Target: aarch64-macos-none
+Errors:
+
+Status: ✅ Success
+```
+```
+Test Case: test_nob_profile_int_div_vs_int_mul
+Target: aarch64-windows-gnu
 Errors:
 
 Status: ✅ Success
