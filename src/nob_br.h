@@ -124,9 +124,15 @@ bool nob_br_read_while(Nob_Buffered_Reader *reader, int (*predicate)(int c), voi
             if (reader->count == 0) return true;
         }
 
-        if (fcntl(reader->fdin, F_GETFD) < 0 && errno == EBADF) { // FD is closed
+#if defined(_WIN32)
+        if (_get_osfhandle(reader->fdin) == -1 && errno == EBADF) {
             return false;
         }
+#else
+        if (fcntl(reader->fdin, F_GETFD) < 0 && errno == EBADF) {
+            return false;
+        }
+#endif
 
         while(reader->cursor < reader->count) {
             char c = reader->items[reader->cursor];

@@ -10,13 +10,23 @@
         size_t capacity; \
     }
 
-#define nob_da_prepend(da, item)                                                   \
-    do {                                                                           \
-        nob_da_reserve((da), (da)->count + 1);                                     \
-        memmove((da)->items + 1, (da)->items, (da)->count * sizeof(*(da)->items)); \
-        (da)->items[0] = (item);                                                   \
-        (da)->count++;                                                             \
+#define nob_da_insert(da, idx, item)                                                                         \
+    do {                                                                                                     \
+        assert((idx) >= 0 && (idx) <= (da)->count);                                                          \
+        nob_da_reserve((da), (da)->count + 1);                                                               \
+        memmove((da)->items + (idx) + 1, (da)->items + (idx), ((da)->count - (idx)) * sizeof(*(da)->items)); \
+        (da)->items[(idx)] = (item);                                                                         \
+        (da)->count++;                                                                                       \
     } while(0)
+
+#define nob_da_delete(da, idx)                                                                                   \
+    do {                                                                                                         \
+        assert((idx) >= 0 && (idx) < (da)->count);                                                               \
+        memmove((da)->items + (idx), (da)->items + (idx) + 1, ((da)->count - (idx) - 1) * sizeof(*(da)->items)); \
+        (da)->count--;                                                                                           \
+    } while(0)
+
+#define nob_da_prepend(da, item) nob_da_insert((da), 0, (item))
 
 #define nob_rand_exclusive(min, max) \
     (assert((min) < (max)), (rand() % ((max) - (min))) + (min))
@@ -68,6 +78,8 @@ defer:
 #define NOB_EXT_STRIP_PREFIX_GUARD_
     #ifndef NOB_UNSTRIP_PREFIX
         #define embed_da       nob_embed_da
+        #define da_insert      nob_da_insert
+        #define da_delete      nob_da_delete
         #define da_prepend     nob_da_prepend
         #define rand_exclusive nob_rand_exclusive
         #define rand_inclusive nob_rand_inclusive

@@ -73,7 +73,7 @@ Test_Case test_cases[] = {
     mk_test(test_nob_entity                    , ALL_OS       , ALL_ARCH, false, "src/nob_entity.h", "src/nob_ilist.h"),
     mk_test(test_nob_graph                     , ALL_OS       , ALL_ARCH, false, "src/nob_graph.h", "src/nob_deque.h", "src/nob_ht.h", "src/nob_hash.h"),
     mk_test(test_nob_rc                        , ALL_OS       , ALL_ARCH, false, "src/nob_rc.h"),
-    mk_test(test_nob_br                        , LINUX | MACOS, ALL_ARCH, false, "src/nob_br.h"),
+    mk_test(test_nob_br                        , ALL_OS       , ALL_ARCH, false, "src/nob_br.h"),
     mk_test(test_nob_jsonrpc                   , ALL_OS       , ALL_ARCH, false, "src/nob_jsonrpc.h", "thirdparty/jim.h", "thirdparty/jimp.h"),
     mk_test(test_nob_mcp                       , LINUX | MACOS, ALL_ARCH, false, "src/nob_mcp.h", "src/nob_jsonrpc.h", "thirdparty/jim.h", "thirdparty/jimp.h"),
     mk_test(test_nob_channels                  , ALL_OS       , ALL_ARCH, false, "src/nob_channels.h", "src/nob_deque.h", "src/nob_fixed_deque.h"),

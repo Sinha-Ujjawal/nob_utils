@@ -1,5 +1,10 @@
-#define _GNU_SOURCE
-#include <unistd.h>
+#if defined(_WIN32)
+#include <io.h>      // Provides pipe(), write(), close() macros under MinGW
+#include <process.h> 
+#define pipe(fds) _pipe((fds), 512, 0) // Windows _pipe requires a buffer size argument
+#else
+#include <unistd.h>  // Standard POSIX headers for Linux/macOS
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>

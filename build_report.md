@@ -10,7 +10,7 @@
 |test_nob_entity|✅ Success|✅ Success|✅ Success|✅ Success|✅ Success|✅ Success|
 |test_nob_graph|✅ Success|✅ Success|✅ Success|✅ Success|✅ Success|✅ Success|
 |test_nob_rc|✅ Success|✅ Success|✅ Success|✅ Success|✅ Success|✅ Success|
-|test_nob_br|✅ Success|✅ Success|🚫 Not-Supported|✅ Success|✅ Success|🚫 Not-Supported|
+|test_nob_br|✅ Success|✅ Success|✅ Success|✅ Success|✅ Success|✅ Success|
 |test_nob_jsonrpc|✅ Success|✅ Success|✅ Success|✅ Success|✅ Success|✅ Success|
 |test_nob_mcp|✅ Success|✅ Success|🚫 Not-Supported|✅ Success|✅ Success|🚫 Not-Supported|
 |test_nob_channels|✅ Success|✅ Success|✅ Success|✅ Success|✅ Success|✅ Success|
@@ -460,6 +460,13 @@ Status: ✅ Success
 ```
 ```
 Test Case: test_nob_br
+Target: x86_64-windows-gnu
+Errors:
+
+Status: ✅ Success
+```
+```
+Test Case: test_nob_br
 Target: aarch64-linux-gnu
 Errors:
 
@@ -468,6 +475,13 @@ Status: ✅ Success
 ```
 Test Case: test_nob_br
 Target: aarch64-macos-none
+Errors:
+
+Status: ✅ Success
+```
+```
+Test Case: test_nob_br
+Target: aarch64-windows-gnu
 Errors:
 
 Status: ✅ Success
