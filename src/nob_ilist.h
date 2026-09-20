@@ -133,6 +133,7 @@
 typedef struct {
     size_t i;
     bool isFirst;
+    int brk;
 } Nob__Ilist_Iterator;
 
 Nob__Ilist_Iterator nob__ilist_iterator(size_t idx);
@@ -140,9 +141,12 @@ void nob__ilist_iterator_update(Nob__Ilist_Iterator *it, size_t newIdx);
 
 #define nob_ilist_foreach(type, it, ilist, root)                                                                                                                      \
     for (Nob__Ilist_Iterator _nob_ilist_foreach_iterator = nob__ilist_iterator((*ilist)[(root)].firstChild);                                                          \
+         !_nob_ilist_foreach_iterator.brk &&                                                                                                                          \
          (root) != 0 && _nob_ilist_foreach_iterator.i != 0 && ( _nob_ilist_foreach_iterator.isFirst || _nob_ilist_foreach_iterator.i != (*ilist)[(root)].firstChild); \
          nob__ilist_iterator_update(&_nob_ilist_foreach_iterator, (*ilist)[_nob_ilist_foreach_iterator.i].nextSibling))                                               \
-        for (type *it = &(*ilist)[_nob_ilist_foreach_iterator.i]; it != NULL; it = NULL)
+        for (type *it = (_nob_ilist_foreach_iterator.brk = 1, &(*ilist)[_nob_ilist_foreach_iterator.i]);                                                              \
+             it != NULL;                                                                                                                                              \
+             it = NULL, _nob_ilist_foreach_iterator.brk = 0)
 
 #endif // NOB_ILIST_H_
 

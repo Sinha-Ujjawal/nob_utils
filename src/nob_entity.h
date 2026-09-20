@@ -14,7 +14,7 @@
 #define NOB_ENTITY_FREE     1
 #define NOB_ENTITY_KIND_OFF 2
 
-#define embed_entitities(T)   \
+#define embed_entities(T)     \
     struct {                  \
         struct {              \
             T value;          \
@@ -124,9 +124,12 @@
 
 #define nob_entity_foreach(type, it, ent, kind)                                                                                                                                  \
     for (Nob__Ilist_Iterator _nob_ilist_foreach_iterator = nob__ilist_iterator((ent)->items[(kind) + NOB_ENTITY_KIND_OFF].firstChild);                                           \
+         !_nob_ilist_foreach_iterator.brk &&                                                                                                                                     \
          _nob_ilist_foreach_iterator.i != 0 && ( _nob_ilist_foreach_iterator.isFirst || _nob_ilist_foreach_iterator.i != (ent)->items[(kind) + NOB_ENTITY_KIND_OFF].firstChild); \
          nob__ilist_iterator_update(&_nob_ilist_foreach_iterator, (ent)->items[_nob_ilist_foreach_iterator.i].nextSibling))                                                      \
-        for (type *it = &(ent)->items[_nob_ilist_foreach_iterator.i].value; it != NULL; it = NULL)
+        for (type *it = (_nob_ilist_foreach_iterator.brk = 1, &(ent)->items[_nob_ilist_foreach_iterator.i].value);                                                               \
+             it != NULL;                                                                                                                                                         \
+             it = NULL, _nob_ilist_foreach_iterator.brk = 0)
 
 #endif // NOB_ENTITY_H_
 

@@ -35,7 +35,7 @@ typedef struct { int x; int y; } Vec2;
 #define KIND_MONSTER 1
 #define NUM_KINDS    2
 
-typedef embed_entitities(Vec2) SimpleStore;
+typedef embed_entities(Vec2) SimpleStore;
 
 /* ── Initialisation ──────────────────────────────────────────────────────── */
 
