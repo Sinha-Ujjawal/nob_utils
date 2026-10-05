@@ -38,96 +38,96 @@
         NOB_ILIST_FIELDS     \
     }
 
-#define nob_ilist_delink(ilist, idx)                                                   \
-    do {                                                                               \
-        size_t _nob_ilist_delink_idx = (idx);                                          \
-        if (_nob_ilist_delink_idx == 0) break;                                         \
-        size_t _nob_ilist_delink_parent = ilist[_nob_ilist_delink_idx].parent;         \
-        if (_nob_ilist_delink_parent == 0) break;                                      \
-        size_t _nob_ilist_delink_prev = ilist[_nob_ilist_delink_idx].prevSibling;      \
-        size_t _nob_ilist_delink_next = ilist[_nob_ilist_delink_idx].nextSibling;      \
-                                                                                       \
-        if (_nob_ilist_delink_next == _nob_ilist_delink_idx) {                         \
-            /* singleton */                                                            \
-            ilist[_nob_ilist_delink_parent].firstChild = 0;                            \
-        } else {                                                                       \
-            if (ilist[_nob_ilist_delink_parent].firstChild == _nob_ilist_delink_idx) { \
-                ilist[_nob_ilist_delink_parent].firstChild = _nob_ilist_delink_next;   \
-            }                                                                          \
-            ilist[_nob_ilist_delink_prev].nextSibling = _nob_ilist_delink_next;        \
-            ilist[_nob_ilist_delink_next].prevSibling = _nob_ilist_delink_prev;        \
-        }                                                                              \
-                                                                                       \
-        ilist[_nob_ilist_delink_idx].parent = 0;                                       \
-        ilist[_nob_ilist_delink_idx].prevSibling = 0;                                  \
-        ilist[_nob_ilist_delink_idx].nextSibling = 0;                                  \
+#define nob_ilist_delink(ilist, accessor, idx)                                                   \
+    do {                                                                                         \
+        size_t _nob_ilist_delink_idx = (idx);                                                    \
+        if (_nob_ilist_delink_idx == 0) break;                                                   \
+        size_t _nob_ilist_delink_parent = accessor(ilist[_nob_ilist_delink_idx]).parent;         \
+        if (_nob_ilist_delink_parent == 0) break;                                                \
+        size_t _nob_ilist_delink_prev = accessor(ilist[_nob_ilist_delink_idx]).prevSibling;      \
+        size_t _nob_ilist_delink_next = accessor(ilist[_nob_ilist_delink_idx]).nextSibling;      \
+                                                                                                 \
+        if (_nob_ilist_delink_next == _nob_ilist_delink_idx) {                                   \
+            /* singleton */                                                                      \
+            accessor(ilist[_nob_ilist_delink_parent]).firstChild = 0;                            \
+        } else {                                                                                 \
+            if (accessor(ilist[_nob_ilist_delink_parent]).firstChild == _nob_ilist_delink_idx) { \
+                accessor(ilist[_nob_ilist_delink_parent]).firstChild = _nob_ilist_delink_next;   \
+            }                                                                                    \
+            accessor(ilist[_nob_ilist_delink_prev]).nextSibling = _nob_ilist_delink_next;        \
+            accessor(ilist[_nob_ilist_delink_next]).prevSibling = _nob_ilist_delink_prev;        \
+        }                                                                                        \
+                                                                                                 \
+        accessor(ilist[_nob_ilist_delink_idx]).parent = 0;                                       \
+        accessor(ilist[_nob_ilist_delink_idx]).prevSibling = 0;                                  \
+        accessor(ilist[_nob_ilist_delink_idx]).nextSibling = 0;                                  \
     } while(0)
 
-#define nob__ilist_link_as_siblings(ilist, i, j)                                               \
-    do {                                                                                       \
-        size_t _nob__ilist_link_as_siblings_i = (i);                                           \
-        size_t _nob__ilist_link_as_siblings_j = (j);                                           \
-        if (_nob__ilist_link_as_siblings_i == 0 || _nob__ilist_link_as_siblings_j == 0) break; \
-        if (_nob__ilist_link_as_siblings_i == _nob__ilist_link_as_siblings_j) break;           \
-        ilist[_nob__ilist_link_as_siblings_i].nextSibling = _nob__ilist_link_as_siblings_j;    \
-        ilist[_nob__ilist_link_as_siblings_j].prevSibling = _nob__ilist_link_as_siblings_i;    \
+#define nob__ilist_link_as_siblings(ilist, accessor, i, j)                                            \
+    do {                                                                                              \
+        size_t _nob__ilist_link_as_siblings_i = (i);                                                  \
+        size_t _nob__ilist_link_as_siblings_j = (j);                                                  \
+        if (_nob__ilist_link_as_siblings_i == 0 || _nob__ilist_link_as_siblings_j == 0) break;        \
+        if (_nob__ilist_link_as_siblings_i == _nob__ilist_link_as_siblings_j) break;                  \
+        accessor(ilist[_nob__ilist_link_as_siblings_i]).nextSibling = _nob__ilist_link_as_siblings_j; \
+        accessor(ilist[_nob__ilist_link_as_siblings_j]).prevSibling = _nob__ilist_link_as_siblings_i; \
     } while(0);
 
-#define nob_ilist_prepend(ilist, root, idx)                                                                        \
-    do {                                                                                                           \
-        size_t _nob_ilist_prepend_root = (root);                                                                   \
-        NOB_ASSERT(_nob_ilist_prepend_root > 0);                                                                   \
-        size_t _nob_ilist_prepend_idx  = (idx);                                                                    \
-        NOB_ASSERT(_nob_ilist_prepend_idx > 0);                                                                    \
-        if (_nob_ilist_prepend_root == _nob_ilist_prepend_idx) break;                                              \
-        nob_ilist_delink(ilist, _nob_ilist_prepend_idx);                                                           \
-                                                                                                                   \
-        if (ilist[_nob_ilist_prepend_root].firstChild == 0) {                                                      \
-            ilist[_nob_ilist_prepend_idx].nextSibling = _nob_ilist_prepend_idx;                                    \
-            ilist[_nob_ilist_prepend_idx].prevSibling = _nob_ilist_prepend_idx;                                    \
-        } else {                                                                                                   \
-            nob__ilist_link_as_siblings(ilist, ilist[ilist[_nob_ilist_prepend_root].firstChild].prevSibling,       \
-                                             _nob_ilist_prepend_idx);                                              \
-            nob__ilist_link_as_siblings(ilist, _nob_ilist_prepend_idx, ilist[_nob_ilist_prepend_root].firstChild); \
-        }                                                                                                          \
-                                                                                                                   \
-        ilist[_nob_ilist_prepend_idx].parent = _nob_ilist_prepend_root;                                            \
-        ilist[_nob_ilist_prepend_root].firstChild = _nob_ilist_prepend_idx;                                        \
+#define nob_ilist_prepend(ilist, accessor, root, idx)                                                                                      \
+    do {                                                                                                                                   \
+        size_t _nob_ilist_prepend_root = (root);                                                                                           \
+        NOB_ASSERT(_nob_ilist_prepend_root > 0);                                                                                           \
+        size_t _nob_ilist_prepend_idx  = (idx);                                                                                            \
+        NOB_ASSERT(_nob_ilist_prepend_idx > 0);                                                                                            \
+        if (_nob_ilist_prepend_root == _nob_ilist_prepend_idx) break;                                                                      \
+        nob_ilist_delink(ilist, accessor, _nob_ilist_prepend_idx);                                                                         \
+                                                                                                                                           \
+        if (accessor(ilist[_nob_ilist_prepend_root]).firstChild == 0) {                                                                    \
+            accessor(ilist[_nob_ilist_prepend_idx]).nextSibling = _nob_ilist_prepend_idx;                                                  \
+            accessor(ilist[_nob_ilist_prepend_idx]).prevSibling = _nob_ilist_prepend_idx;                                                  \
+        } else {                                                                                                                           \
+            nob__ilist_link_as_siblings(ilist, accessor, accessor(ilist[accessor(ilist[_nob_ilist_prepend_root]).firstChild]).prevSibling, \
+                                             _nob_ilist_prepend_idx);                                                                      \
+            nob__ilist_link_as_siblings(ilist, accessor, _nob_ilist_prepend_idx, accessor(ilist[_nob_ilist_prepend_root]).firstChild);     \
+        }                                                                                                                                  \
+                                                                                                                                           \
+        accessor(ilist[_nob_ilist_prepend_idx]).parent = _nob_ilist_prepend_root;                                                          \
+        accessor(ilist[_nob_ilist_prepend_root]).firstChild = _nob_ilist_prepend_idx;                                                      \
     } while(0)
 
-#define nob_ilist_shift(ilist, root)                                      \
-    do {                                                                  \
-        size_t _nob_ilist_shift_root = (root);                            \
-        NOB_ASSERT(_nob_ilist_shift_root > 0);                            \
-        nob_ilist_delink(ilist, ilist[_nob_ilist_shift_root].firstChild); \
+#define nob_ilist_shift(ilist, accessor, root)                                                \
+    do {                                                                                      \
+        size_t _nob_ilist_shift_root = (root);                                                \
+        NOB_ASSERT(_nob_ilist_shift_root > 0);                                                \
+        nob_ilist_delink(ilist, accessor, accessor(ilist[_nob_ilist_shift_root]).firstChild); \
     } while(0)
 
-#define nob_ilist_append(ilist, root, idx)                                                                       \
-    do {                                                                                                         \
-        size_t _nob_ilist_append_root = (root);                                                                  \
-        NOB_ASSERT(_nob_ilist_append_root > 0);                                                                  \
-        size_t _nob_ilist_append_idx  = (idx);                                                                   \
-        NOB_ASSERT(_nob_ilist_append_idx > 0);                                                                   \
-        if (_nob_ilist_append_root == _nob_ilist_append_idx) break;                                              \
-        nob_ilist_delink(ilist, _nob_ilist_append_idx);                                                          \
-        if (ilist[_nob_ilist_append_root].firstChild == 0) {                                                     \
-            ilist[_nob_ilist_append_idx].nextSibling = _nob_ilist_append_idx;                                    \
-            ilist[_nob_ilist_append_idx].prevSibling = _nob_ilist_append_idx;                                    \
-            ilist[_nob_ilist_append_root].firstChild = _nob_ilist_append_idx;                                    \
-        } else {                                                                                                 \
-            nob__ilist_link_as_siblings(ilist, ilist[ilist[_nob_ilist_append_root].firstChild].prevSibling,      \
-                                             _nob_ilist_append_idx);                                             \
-            nob__ilist_link_as_siblings(ilist, _nob_ilist_append_idx, ilist[_nob_ilist_append_root].firstChild); \
-        }                                                                                                        \
-                                                                                                                 \
-        ilist[_nob_ilist_append_idx].parent = _nob_ilist_append_root;                                            \
+#define nob_ilist_append(ilist, accessor, root, idx)                                                                                      \
+    do {                                                                                                                                  \
+        size_t _nob_ilist_append_root = (root);                                                                                           \
+        NOB_ASSERT(_nob_ilist_append_root > 0);                                                                                           \
+        size_t _nob_ilist_append_idx  = (idx);                                                                                            \
+        NOB_ASSERT(_nob_ilist_append_idx > 0);                                                                                            \
+        if (_nob_ilist_append_root == _nob_ilist_append_idx) break;                                                                       \
+        nob_ilist_delink(ilist, accessor, _nob_ilist_append_idx);                                                                         \
+        if (accessor(ilist[_nob_ilist_append_root]).firstChild == 0) {                                                                    \
+            accessor(ilist[_nob_ilist_append_idx]).nextSibling = _nob_ilist_append_idx;                                                   \
+            accessor(ilist[_nob_ilist_append_idx]).prevSibling = _nob_ilist_append_idx;                                                   \
+            accessor(ilist[_nob_ilist_append_root]).firstChild = _nob_ilist_append_idx;                                                   \
+        } else {                                                                                                                          \
+            nob__ilist_link_as_siblings(ilist, accessor, accessor(ilist[accessor(ilist[_nob_ilist_append_root]).firstChild]).prevSibling, \
+                                             _nob_ilist_append_idx);                                                                      \
+            nob__ilist_link_as_siblings(ilist, accessor, _nob_ilist_append_idx, accessor(ilist[_nob_ilist_append_root]).firstChild);      \
+        }                                                                                                                                 \
+                                                                                                                                          \
+        accessor(ilist[_nob_ilist_append_idx]).parent = _nob_ilist_append_root;                                                           \
     } while(0)
 
-#define nob_ilist_pop(ilist, root)                                                         \
-    do {                                                                                   \
-        size_t _nob_ilist_pop_root = (root);                                               \
-        NOB_ASSERT(_nob_ilist_pop_root > 0);                                               \
-        nob_ilist_delink(ilist, ilist[ilist[_nob_ilist_pop_root].firstChild].prevSibling); \
+#define nob_ilist_pop(ilist, accessor, root)                                                                             \
+    do {                                                                                                                 \
+        size_t _nob_ilist_pop_root = (root);                                                                             \
+        NOB_ASSERT(_nob_ilist_pop_root > 0);                                                                             \
+        nob_ilist_delink(ilist, accessor, accessor(ilist[accessor(ilist[_nob_ilist_pop_root]).firstChild]).prevSibling); \
     } while(0)
 
 typedef struct {
@@ -139,14 +139,16 @@ typedef struct {
 Nob__Ilist_Iterator nob__ilist_iterator(size_t idx);
 void nob__ilist_iterator_update(Nob__Ilist_Iterator *it, size_t newIdx);
 
-#define nob_ilist_foreach(type, it, ilist, root)                                                                                                                      \
-    for (Nob__Ilist_Iterator _nob_ilist_foreach_iterator = nob__ilist_iterator((*ilist)[(root)].firstChild);                                                          \
-         !_nob_ilist_foreach_iterator.brk &&                                                                                                                          \
-         (root) != 0 && _nob_ilist_foreach_iterator.i != 0 && ( _nob_ilist_foreach_iterator.isFirst || _nob_ilist_foreach_iterator.i != (*ilist)[(root)].firstChild); \
-         nob__ilist_iterator_update(&_nob_ilist_foreach_iterator, (*ilist)[_nob_ilist_foreach_iterator.i].nextSibling))                                               \
-        for (type *it = (_nob_ilist_foreach_iterator.brk = 1, &(*ilist)[_nob_ilist_foreach_iterator.i]);                                                              \
-             it != NULL;                                                                                                                                              \
-             it = NULL, _nob_ilist_foreach_iterator.brk = 0)
+#define nob_ilist_foreach(type, it, ilist, accessor, root)                                                                                                  \
+    for (Nob__Ilist_Iterator _nob_ilist_foreach_iterator##__COUNTER__ = nob__ilist_iterator(accessor((*ilist)[(root)]).firstChild);                         \
+         !_nob_ilist_foreach_iterator##__COUNTER__.brk &&                                                                                                   \
+         (root) != 0 &&                                                                                                                                     \
+         _nob_ilist_foreach_iterator##__COUNTER__.i != 0 &&                                                                                                 \
+         ( _nob_ilist_foreach_iterator##__COUNTER__.isFirst || _nob_ilist_foreach_iterator##__COUNTER__.i != accessor((*ilist)[(root)]).firstChild);        \
+         nob__ilist_iterator_update(&_nob_ilist_foreach_iterator##__COUNTER__, accessor((*ilist)[_nob_ilist_foreach_iterator##__COUNTER__.i]).nextSibling)) \
+        for (type *it = (_nob_ilist_foreach_iterator##__COUNTER__.brk = 1, &accessor((*ilist)[_nob_ilist_foreach_iterator##__COUNTER__.i]));                \
+             it != NULL;                                                                                                                                    \
+             it = NULL, _nob_ilist_foreach_iterator##__COUNTER__.brk = 0)
 
 #endif // NOB_ILIST_H_
 

@@ -70,7 +70,9 @@ Test_Case test_cases[] = {
     mk_test(test_nob_hash                      , ALL_OS       , ALL_ARCH, false, "src/nob_hash.h"),
     mk_test(test_nob_ht                        , ALL_OS       , ALL_ARCH, false, "src/nob_ht.h", "src/nob_hash.h"),
     mk_test(test_nob_ilist                     , ALL_OS       , ALL_ARCH, false, "src/nob_ilist.h"),
+    mk_test(test_nob_ilist_nested              , ALL_OS       , ALL_ARCH, false, "src/nob_ilist.h"),
     mk_test(test_nob_entity                    , ALL_OS       , ALL_ARCH, false, "src/nob_entity.h", "src/nob_ilist.h"),
+    mk_test(test_nob_entity_nested             , ALL_OS       , ALL_ARCH, false, "src/nob_entity.h", "src/nob_ilist.h"),
     mk_test(test_nob_graph                     , ALL_OS       , ALL_ARCH, false, "src/nob_graph.h", "src/nob_deque.h", "src/nob_ht.h", "src/nob_hash.h"),
     mk_test(test_nob_rc                        , ALL_OS       , ALL_ARCH, false, "src/nob_rc.h"),
     mk_test(test_nob_br                        , ALL_OS       , ALL_ARCH, false, "src/nob_br.h"),
@@ -129,7 +131,7 @@ bool build() {
                     "-I./thirdparty", "-I./src",
                     "-O1",\
                     "-Wall", "-Wextra", "-Werror", "-Wswitch-enum",
-                    "-Wno-unused-variable", "-Wno-unused-but-set-variable", "-Wno-format", // TODO: fix these warning errors
+                    "-Wno-unused-variable", "-Wno-unused-but-set-variable", "-Wno-format", "-Wno-unused-function", // TODO: fix these warning errors
                     "-ggdb",
                     "-o", output_path,
                     test_case->source_files[0]

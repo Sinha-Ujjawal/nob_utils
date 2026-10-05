@@ -7,7 +7,9 @@
 |test_nob_hash|✅ Success|✅ Success|✅ Success|✅ Success|✅ Success|✅ Success|
 |test_nob_ht|✅ Success|✅ Success|✅ Success|✅ Success|✅ Success|✅ Success|
 |test_nob_ilist|✅ Success|✅ Success|✅ Success|✅ Success|✅ Success|✅ Success|
+|test_nob_ilist_nested|✅ Success|✅ Success|✅ Success|✅ Success|✅ Success|✅ Success|
 |test_nob_entity|✅ Success|✅ Success|✅ Success|✅ Success|✅ Success|✅ Success|
+|test_nob_entity_nested|✅ Success|✅ Success|✅ Success|✅ Success|✅ Success|✅ Success|
 |test_nob_graph|✅ Success|✅ Success|✅ Success|✅ Success|✅ Success|✅ Success|
 |test_nob_rc|✅ Success|✅ Success|✅ Success|✅ Success|✅ Success|✅ Success|
 |test_nob_br|✅ Success|✅ Success|✅ Success|✅ Success|✅ Success|✅ Success|
@@ -319,6 +321,48 @@ Errors:
 Status: ✅ Success
 ```
 ```
+Test Case: test_nob_ilist_nested
+Target: x86_64-linux-gnu
+Errors:
+
+Status: ✅ Success
+```
+```
+Test Case: test_nob_ilist_nested
+Target: x86_64-macos-none
+Errors:
+
+Status: ✅ Success
+```
+```
+Test Case: test_nob_ilist_nested
+Target: x86_64-windows-gnu
+Errors:
+
+Status: ✅ Success
+```
+```
+Test Case: test_nob_ilist_nested
+Target: aarch64-linux-gnu
+Errors:
+
+Status: ✅ Success
+```
+```
+Test Case: test_nob_ilist_nested
+Target: aarch64-macos-none
+Errors:
+
+Status: ✅ Success
+```
+```
+Test Case: test_nob_ilist_nested
+Target: aarch64-windows-gnu
+Errors:
+
+Status: ✅ Success
+```
+```
 Test Case: test_nob_entity
 Target: x86_64-linux-gnu
 Errors:
@@ -355,6 +399,48 @@ Status: ✅ Success
 ```
 ```
 Test Case: test_nob_entity
+Target: aarch64-windows-gnu
+Errors:
+
+Status: ✅ Success
+```
+```
+Test Case: test_nob_entity_nested
+Target: x86_64-linux-gnu
+Errors:
+
+Status: ✅ Success
+```
+```
+Test Case: test_nob_entity_nested
+Target: x86_64-macos-none
+Errors:
+
+Status: ✅ Success
+```
+```
+Test Case: test_nob_entity_nested
+Target: x86_64-windows-gnu
+Errors:
+
+Status: ✅ Success
+```
+```
+Test Case: test_nob_entity_nested
+Target: aarch64-linux-gnu
+Errors:
+
+Status: ✅ Success
+```
+```
+Test Case: test_nob_entity_nested
+Target: aarch64-macos-none
+Errors:
+
+Status: ✅ Success
+```
+```
+Test Case: test_nob_entity_nested
 Target: aarch64-windows-gnu
 Errors:
 

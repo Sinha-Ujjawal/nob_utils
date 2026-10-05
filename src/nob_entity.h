@@ -14,6 +14,8 @@
 #define NOB_ENTITY_FREE     1
 #define NOB_ENTITY_KIND_OFF 2
 
+#define NOB_ENTITY_ID(x) x
+
 #define embed_entities(T)     \
     struct {                  \
         struct {              \
@@ -36,21 +38,21 @@
         }                                                                     \
     } while(0)
 
-#define nob_entity_create(ent, kind, index_ptr)                                     \
-    do {                                                                            \
-        assert((kind) >= 0 && (kind) < (ent)->kinds && "Invalid kind");             \
-        if ((ent)->items[NOB_ENTITY_FREE].firstChild != 0) {                        \
-            /* There are some free entity slots */                                  \
-            *(index_ptr) = (ent)->items[NOB_ENTITY_FREE].firstChild;                \
-            nob_ilist_delink((ent)->items, *(index_ptr));                           \
-        } else {                                                                    \
-            nob_da_reserve((ent), (ent)->count + 1);                                \
-            *(index_ptr) = (ent)->count;                                            \
-            memset((ent)->items + *(index_ptr), 0, sizeof(*(ent)->items));          \
-            (ent)->count += 1;                                                      \
-        }                                                                           \
-        /* link the kind with the *(index_ptr) */                                   \
-        nob_ilist_append((ent)->items, (kind) + NOB_ENTITY_KIND_OFF, *(index_ptr)); \
+#define nob_entity_create(ent, kind, index_ptr)                                                    \
+    do {                                                                                           \
+        assert((kind) >= 0 && (kind) < (ent)->kinds && "Invalid kind");                            \
+        if ((ent)->items[NOB_ENTITY_FREE].firstChild != 0) {                                       \
+            /* There are some free entity slots */                                                 \
+            *(index_ptr) = (ent)->items[NOB_ENTITY_FREE].firstChild;                               \
+            nob_ilist_delink((ent)->items, NOB_ENTITY_ID, *(index_ptr));                           \
+        } else {                                                                                   \
+            nob_da_reserve((ent), (ent)->count + 1);                                               \
+            *(index_ptr) = (ent)->count;                                                           \
+            memset((ent)->items + *(index_ptr), 0, sizeof(*(ent)->items));                         \
+            (ent)->count += 1;                                                                     \
+        }                                                                                          \
+        /* link the kind with the *(index_ptr) */                                                  \
+        nob_ilist_append((ent)->items, NOB_ENTITY_ID, (kind) + NOB_ENTITY_KIND_OFF, *(index_ptr)); \
     } while(0)
 
 #define nob_entity_get(ent, index, value_ptr)                               \
@@ -87,49 +89,49 @@
         }                                                                   \
     } while(0)
 
-#define nob_entity_delete(ent, index)                                       \
-    do {                                                                    \
-        size_t _nob_get_idx = (index);                                      \
-        /* Basic bounds check */                                            \
-        if (_nob_get_idx >= (ent)->count) break;                            \
-        /* Ensure it's a real entity, not a Reserved Head/NULL/Free slot */ \
-        if (_nob_get_idx < (ent)->kinds + NOB_ENTITY_KIND_OFF) break;       \
-        /* Ensure it is actually linked to a valid Kind */                  \
-        size_t _parent = (ent)->items[_nob_get_idx].parent;                 \
-        if (_parent >= NOB_ENTITY_KIND_OFF &&                               \
-            _parent < (ent)->kinds + NOB_ENTITY_KIND_OFF) {                 \
-            nob_ilist_append((ent)->items, NOB_ENTITY_FREE, _nob_get_idx);  \
-        }                                                                   \
+#define nob_entity_delete(ent, index)                                                     \
+    do {                                                                                  \
+        size_t _nob_get_idx = (index);                                                    \
+        /* Basic bounds check */                                                          \
+        if (_nob_get_idx >= (ent)->count) break;                                          \
+        /* Ensure it's a real entity, not a Reserved Head/NULL/Free slot */               \
+        if (_nob_get_idx < (ent)->kinds + NOB_ENTITY_KIND_OFF) break;                     \
+        /* Ensure it is actually linked to a valid Kind */                                \
+        size_t _parent = (ent)->items[_nob_get_idx].parent;                               \
+        if (_parent >= NOB_ENTITY_KIND_OFF &&                                             \
+            _parent < (ent)->kinds + NOB_ENTITY_KIND_OFF) {                               \
+            nob_ilist_append((ent)->items, NOB_ENTITY_ID, NOB_ENTITY_FREE, _nob_get_idx); \
+        }                                                                                 \
     } while (0)
 
-#define nob_entity_move(ent, index, new_kind)                                        \
-    do {                                                                             \
-        assert((new_kind) >= 0 && (new_kind) < (ent)->kinds && "Invalid kind");      \
-        size_t _nob_get_idx = (index);                                               \
-        /* Basic bounds check */                                                     \
-        if (_nob_get_idx >= (ent)->count) break;                                     \
-        /* Ensure it's a real entity, not a Reserved Head/NULL/Free slot */          \
-        if (_nob_get_idx < (ent)->kinds + NOB_ENTITY_KIND_OFF) break;                \
-        /* Ensure it is actually linked to a valid Kind */                           \
-        size_t _parent = (ent)->items[_nob_get_idx].parent;                          \
-        if (_parent >= NOB_ENTITY_KIND_OFF &&                                        \
-            _parent < (ent)->kinds + NOB_ENTITY_KIND_OFF &&                          \
-            _parent != (new_kind)) {                                                 \
-            /* Delinking from existing kind */                                       \
-            nob_ilist_delink((ent)->items, index);                                   \
-            /* Linking to new kind */                                                \
-            nob_ilist_append((ent)->items, (new_kind) + NOB_ENTITY_KIND_OFF, index); \
-        }                                                                            \
+#define nob_entity_move(ent, index, new_kind)                                                       \
+    do {                                                                                            \
+        assert((new_kind) >= 0 && (new_kind) < (ent)->kinds && "Invalid kind");                     \
+        size_t _nob_get_idx = (index);                                                              \
+        /* Basic bounds check */                                                                    \
+        if (_nob_get_idx >= (ent)->count) break;                                                    \
+        /* Ensure it's a real entity, not a Reserved Head/NULL/Free slot */                         \
+        if (_nob_get_idx < (ent)->kinds + NOB_ENTITY_KIND_OFF) break;                               \
+        /* Ensure it is actually linked to a valid Kind */                                          \
+        size_t _parent = (ent)->items[_nob_get_idx].parent;                                         \
+        if (_parent >= NOB_ENTITY_KIND_OFF &&                                                       \
+            _parent < (ent)->kinds + NOB_ENTITY_KIND_OFF &&                                         \
+            _parent != (new_kind)) {                                                                \
+            /* Delinking from existing kind */                                                      \
+            nob_ilist_delink((ent)->items, NOB_ENTITY_ID, index);                                   \
+            /* Linking to new kind */                                                               \
+            nob_ilist_append((ent)->items, NOB_ENTITY_ID, (new_kind) + NOB_ENTITY_KIND_OFF, index); \
+        }                                                                                           \
     } while(0)
 
-#define nob_entity_foreach(type, it, ent, kind)                                                                                                                                  \
-    for (Nob__Ilist_Iterator _nob_ilist_foreach_iterator = nob__ilist_iterator((ent)->items[(kind) + NOB_ENTITY_KIND_OFF].firstChild);                                           \
-         !_nob_ilist_foreach_iterator.brk &&                                                                                                                                     \
-         _nob_ilist_foreach_iterator.i != 0 && ( _nob_ilist_foreach_iterator.isFirst || _nob_ilist_foreach_iterator.i != (ent)->items[(kind) + NOB_ENTITY_KIND_OFF].firstChild); \
-         nob__ilist_iterator_update(&_nob_ilist_foreach_iterator, (ent)->items[_nob_ilist_foreach_iterator.i].nextSibling))                                                      \
-        for (type *it = (_nob_ilist_foreach_iterator.brk = 1, &(ent)->items[_nob_ilist_foreach_iterator.i].value);                                                               \
-             it != NULL;                                                                                                                                                         \
-             it = NULL, _nob_ilist_foreach_iterator.brk = 0)
+#define nob_entity_foreach(type, it, ent, kind)                                                                                                                                                                         \
+    for (Nob__Ilist_Iterator _nob_ilist_foreach_iterator##__COUNTER__ = nob__ilist_iterator((ent)->items[(kind) + NOB_ENTITY_KIND_OFF].firstChild);                                                                     \
+         !_nob_ilist_foreach_iterator##__COUNTER__.brk &&                                                                                                                                                               \
+         _nob_ilist_foreach_iterator##__COUNTER__.i != 0 && ( _nob_ilist_foreach_iterator##__COUNTER__.isFirst || _nob_ilist_foreach_iterator##__COUNTER__.i != (ent)->items[(kind) + NOB_ENTITY_KIND_OFF].firstChild); \
+         nob__ilist_iterator_update(&_nob_ilist_foreach_iterator##__COUNTER__, (ent)->items[_nob_ilist_foreach_iterator##__COUNTER__.i].nextSibling))                                                                   \
+        for (type *it = (_nob_ilist_foreach_iterator##__COUNTER__.brk = 1, &(ent)->items[_nob_ilist_foreach_iterator##__COUNTER__.i].value);                                                                            \
+             it != NULL;                                                                                                                                                                                                \
+             it = NULL, _nob_ilist_foreach_iterator##__COUNTER__.brk = 0)
 
 #endif // NOB_ENTITY_H_
 
