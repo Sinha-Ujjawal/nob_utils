@@ -206,8 +206,6 @@ bool nob_jsonrpc_handle_request(
             request_handler->ctx, request_handler->request_parser.method, request_handler->params_parser.params, success, failure, &error_message);
     }
 
-    if (error_code == NOB_JSONRPC_ERROR_CODE_NO_RESPONSE) return true;
-
     if (success->sink_count == success_sink_saved) {
         // Nothing added in success jim, hence setting result to null
         jim_null(success);
@@ -217,7 +215,7 @@ bool nob_jsonrpc_handle_request(
         jim_null(failure);
     }
 
-    if (error_code == NOB_JSONRPC_ERROR_CODE_SUCCESS) {
+    if (error_code == NOB_JSONRPC_ERROR_CODE_SUCCESS || error_code == NOB_JSONRPC_ERROR_CODE_NO_RESPONSE) {
         // Success
         jim_object_end(success); // success_main
         return true;

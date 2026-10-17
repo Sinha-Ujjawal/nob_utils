@@ -73,7 +73,7 @@ void run_mcp_test(const char *cat, const char *name, const char *json, MCP_Reque
     } else {
         response = sv_from_parts(failure->sink, failure->sink_count);
     }
-    nob_log(INFO, "-> "SV_Fmt, SV_Arg(response));
+    nob_log(INFO, "-> "SV_Fmt"\n", SV_Arg(response));
 }
 
 int main(void) {

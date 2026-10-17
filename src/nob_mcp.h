@@ -161,6 +161,7 @@ bool nob_mcp__params_parser(void *mcp_request_handler_ptr, Nob_String_View metho
     Nob_MCP_Request_Handler *mcp_request_handler = mcp_request_handler_ptr;
 
     if (nob_sv_eq(method, nob_sv_from_cstr("tools/call"))) {
+        jimp_begin(&mcp_request_handler->tool_args, NULL, 0, 0); // reset tool_args
         if (!jimp_object_begin(jimp)) return false;
         while (jimp_object_member(jimp)) {
             if (strcmp(jimp->string, "name") == 0) {
@@ -246,7 +247,12 @@ Nob_JSONRPC_Error_Code nob_mcp__method_handler(void *mcp_request_handler_ptr, No
             jim_member_key(success, "content");
             jim_array_begin(success); {
                 if (mcp_request_handler->tools_call_clb != NULL) {
-                    is_error = !mcp_request_handler->tools_call_clb(mcp_request_handler, mcp_request_handler->tool_name, &mcp_request_handler->tool_args);
+                    if (mcp_request_handler->tool_args.start == NULL) {
+                        nob_mcp_write_text_content(mcp_request_handler, "No arguments provided!");
+                        is_error = true;
+                    } else {
+                        is_error = !mcp_request_handler->tools_call_clb(mcp_request_handler, mcp_request_handler->tool_name, &mcp_request_handler->tool_args);
+                    }
                 }
                 if (is_error) {
                     nob_mcp_write_text_content(mcp_request_handler, "An error has occurred!");
