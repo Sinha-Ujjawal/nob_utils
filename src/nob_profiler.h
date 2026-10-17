@@ -138,7 +138,7 @@ typedef struct {
 #define nob_repeatition_tester_error(tester, ...)  \
     do {                                           \
         tester->mode = NOB_REPEATITION_MODE_ERROR; \
-        nob_log(ERROR, __VA_ARGS__);               \
+        nob_log(NOB_ERROR, __VA_ARGS__);           \
     } while(0)
 void nob_repeatition_tester_new_test_wave(Nob_Repeatition_Tester *tester, u64 target_processed_byte_count, u64 timer_freq, u32 seconds_to_try);
 void nob_repeatition_tester_begin_timer(Nob_Repeatition_Tester *tester);
@@ -150,7 +150,7 @@ bool nob_repeatition_tester_is_testing(Nob_Repeatition_Tester *tester);
 
 #define nob_repeatition_test(label, tester, cpu_timer_freq, seconds_to_try, total_size, init, to_measure, cleanup) \
     do {                                                                                                           \
-        nob_log(INFO, "START: repeatition_%s", label);                                                             \
+        nob_log(NOB_INFO, "START: repeatition_%s", label);                                                         \
         repeatition_tester_new_test_wave(&(tester), (total_size), (cpu_timer_freq), (seconds_to_try));             \
         while (repeatition_tester_is_testing(&(tester))) {                                                         \
             NOB_REPEATITION_TEST_UNWRAP init                                                                       \
@@ -159,7 +159,7 @@ bool nob_repeatition_tester_is_testing(Nob_Repeatition_Tester *tester);
             repeatition_tester_end_timer(&(tester));                                                               \
             NOB_REPEATITION_TEST_UNWRAP cleanup                                                                    \
         }                                                                                                          \
-        nob_log(INFO, "END: repeatition_%s\n", label);                                                             \
+        nob_log(NOB_INFO, "END: repeatition_%s\n", label);                                                         \
     } while(0);
 
 #endif // NOB_PROFILER_H_
@@ -376,7 +376,7 @@ void nob_log_profiler(Nob_Profiler profiler) {
 #if NOB_PROFILER_ENABLED
     NOB_ASSERT(profiler.blocks.count == 0); // No open blocks should be present
     u64 total_elapsed = NOB_PROFILER_BLOCK_TIMER() - profiler.start;
-    nob_log(INFO, "Total: %.2f ms (Timer Freq: %.2f)", nob_measure_time_in_millis_from_elapsed(total_elapsed, profiler.timer_freq), profiler.timer_freq);
+    nob_log(NOB_INFO, "Total: %.2f ms (Timer Freq: %.2f)", nob_measure_time_in_millis_from_elapsed(total_elapsed, profiler.timer_freq), profiler.timer_freq);
 #if NOB_PROFILER_BLOCKS_ENABLED
     qsort(profiler.anchors.items + 1, profiler.anchors.count - 1, sizeof(Nob_Profile_Anchor), nob__cmp_by_first_start);
     for (size_t i = 1; i < profiler.anchors.count; i++) {
@@ -425,7 +425,7 @@ void nob_log_profiler(Nob_Profiler profiler) {
             }
         }
         NOB_ASSERT(log_line != NULL);
-        nob_log(INFO, "%s", log_line);
+        nob_log(NOB_INFO, "%s", log_line);
         nob_temp_rewind(mark);
     }
     qsort(profiler.anchors.items + 1, profiler.anchors.count - 1, sizeof(Nob_Profile_Anchor), nob__cmp_by_anchor_idx);

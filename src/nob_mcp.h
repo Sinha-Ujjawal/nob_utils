@@ -156,11 +156,11 @@ void nob_mcp_write_text_content_sized(Nob_MCP_Request_Handler *request_handler, 
 #ifndef NOB_MCP_IMPLEMENTATION_GAURD_
 
 bool nob_mcp__params_parser(void *mcp_request_handler_ptr, Nob_String_View method, Jimp *jimp, void *params) {
-    UNUSED(params);
+    NOB_UNUSED(params);
     assert(mcp_request_handler_ptr != NULL);
     Nob_MCP_Request_Handler *mcp_request_handler = mcp_request_handler_ptr;
 
-    if (nob_sv_eq(method, sv_from_cstr("tools/call"))) {
+    if (nob_sv_eq(method, nob_sv_from_cstr("tools/call"))) {
         if (!jimp_object_begin(jimp)) return false;
         while (jimp_object_member(jimp)) {
             if (strcmp(jimp->string, "name") == 0) {
@@ -183,13 +183,13 @@ bool nob_mcp__params_parser(void *mcp_request_handler_ptr, Nob_String_View metho
 }
 
 Nob_JSONRPC_Error_Code nob_mcp__method_handler(void *mcp_request_handler_ptr, Nob_String_View method, void *params, Jim *success, Jim *failure, char **error_message) {
-    UNUSED(params);
-    UNUSED(failure);
-    UNUSED(error_message);
+    NOB_UNUSED(params);
+    NOB_UNUSED(failure);
+    NOB_UNUSED(error_message);
     assert(mcp_request_handler_ptr != NULL);
     Nob_MCP_Request_Handler *mcp_request_handler = mcp_request_handler_ptr;
 
-    if (nob_sv_eq(method, sv_from_cstr("initialize"))) {
+    if (nob_sv_eq(method, nob_sv_from_cstr("initialize"))) {
         jim_object_begin(success); {
             // protocolVersion
             jim_member_key(success, "protocolVersion");
@@ -225,9 +225,9 @@ Nob_JSONRPC_Error_Code nob_mcp__method_handler(void *mcp_request_handler_ptr, No
             }
         } jim_object_end(success);
         return NOB_JSONRPC_ERROR_CODE_SUCCESS;
-    } else if (nob_sv_starts_with(method, sv_from_cstr("notification"))) { // No response in case of notification
+    } else if (nob_sv_starts_with(method, nob_sv_from_cstr("notification"))) { // No response in case of notification
         return NOB_JSONRPC_ERROR_CODE_NO_RESPONSE;
-    } else if (nob_sv_eq(method, sv_from_cstr("tools/list"))) {
+    } else if (nob_sv_eq(method, nob_sv_from_cstr("tools/list"))) {
         jim_object_begin(success); {
             jim_member_key(success, "tools");
             jim_array_begin(success); {
@@ -240,7 +240,7 @@ Nob_JSONRPC_Error_Code nob_mcp__method_handler(void *mcp_request_handler_ptr, No
             } jim_array_end(success);
         } jim_object_end(success);
         return NOB_JSONRPC_ERROR_CODE_SUCCESS;
-    } else if (nob_sv_eq(method, sv_from_cstr("tools/call"))) {
+    } else if (nob_sv_eq(method, nob_sv_from_cstr("tools/call"))) {
         jim_object_begin(success); {
             bool is_error = false;
             jim_member_key(success, "content");
@@ -322,19 +322,19 @@ const char *nob_mcp__tools_list_scope_to_cstr(Nob_MCP_Tools_List_Scope scope) {
         case NOB_MCP_SCOPE_SET_ARRAY_TYPE: return "SCOPE_SET_ARRAY_TYPE";
         case __count_Nob_MCP_Tools_List_Scope:
         default:
-            UNREACHABLE("Unknown Nob_MCP_Tools_List_Scope");
+            NOB_UNREACHABLE("Unknown Nob_MCP_Tools_List_Scope");
     }
 }
 
 void nob_mcp__print_tools_list_scopes(Nob_MCP_Request_Handler request_handler) {
-    nob_log(ERROR, "Tools List Scopes Content:");
-    da_foreach(Nob_MCP_Tools_List_Scope, it, &request_handler.tools_list_scopes) {
-        nob_log(ERROR, "  %s", nob_mcp__tools_list_scope_to_cstr(*it));
+    nob_log(NOB_ERROR, "Tools List Scopes Content:");
+    nob_da_foreach(Nob_MCP_Tools_List_Scope, it, &request_handler.tools_list_scopes) {
+        nob_log(NOB_ERROR, "  %s", nob_mcp__tools_list_scope_to_cstr(*it));
     }
 }
 
 void nob_mcp__assert_tool_list_scope(Nob_MCP_Request_Handler request_handler, Nob_MCP_Tools_List_Scope expected, const char *file, size_t line_no) {
-    Nob_MCP_Tools_List_Scope last = da_last(&request_handler.tools_list_scopes);
+    Nob_MCP_Tools_List_Scope last = nob_da_last(&request_handler.tools_list_scopes);
     if ((last & expected) == 0) {
         fprintf(stderr, "ERROR: %s:%zu Expected tools_list scope: ", file, line_no);
         size_t count = 0;
@@ -355,7 +355,7 @@ void nob_mcp__assert_tool_list_scope(Nob_MCP_Request_Handler request_handler, No
 
 void nob_mcp_begin_tool_impl(Nob_MCP_Request_Handler *request_handler, Nob_MCP_Tool_Desc tool_desc, const char *file, size_t line_no) {
     if (request_handler->tools_list_scopes.count != 0) {
-        nob_log(ERROR, "%s:%zu tools_list_scopes must be empty to define a new tool", file, line_no);
+        nob_log(NOB_ERROR, "%s:%zu tools_list_scopes must be empty to define a new tool", file, line_no);
         nob_mcp__print_tools_list_scopes(*request_handler);
         assert(false);
     }
@@ -382,7 +382,7 @@ void nob_mcp_begin_tool_impl(Nob_MCP_Request_Handler *request_handler, Nob_MCP_T
             // properties
             jim_member_key(jim, "properties");
             jim_object_begin(jim);
-    da_append(&request_handler->tools_list_scopes, NOB_MCP_SCOPE_TOOL);
+    nob_da_append(&request_handler->tools_list_scopes, NOB_MCP_SCOPE_TOOL);
 }
 
 void nob_mcp_end_tool_impl(Nob_MCP_Request_Handler *request_handler, const char *file, size_t line_no) {
@@ -391,7 +391,7 @@ void nob_mcp_end_tool_impl(Nob_MCP_Request_Handler *request_handler, const char 
             jim_object_end(jim);
         jim_object_end(jim);
     jim_object_end(jim);
-    UNUSED(da_pop(&request_handler->tools_list_scopes));
+    NOB_UNUSED(nob_da_pop(&request_handler->tools_list_scopes));
 }
 
 void nob_mcp__type_and_constraints(Jim *jim, Nob_MCP_Tool_Param_Name_And_Desc_With_Constraints tool_param_desc) {
@@ -461,7 +461,7 @@ void nob_mcp__type_and_constraints(Jim *jim, Nob_MCP_Tool_Param_Name_And_Desc_Wi
         } break;
         case __count_NOB_MCP_PARAM_TYPE_TYPE:
         default:
-            UNREACHABLE("Unknown NOB_MCP_PARAM_TYPE_TYPE");
+            NOB_UNREACHABLE("Unknown NOB_MCP_PARAM_TYPE_TYPE");
     }
 }
 
@@ -492,7 +492,7 @@ void nob_mcp_add_array_param_impl(
         NOB_MCP_SCOPE_TOOL | NOB_MCP_SCOPE_ARRAY | NOB_MCP_SCOPE_OBJECT,
         file, line_no);
     Jim *jim = request_handler->out;
-    if (da_last(&request_handler->tools_list_scopes) == NOB_MCP_SCOPE_ARRAY) {
+    if (nob_da_last(&request_handler->tools_list_scopes) == NOB_MCP_SCOPE_ARRAY) {
         // type
         jim_member_key(jim, "type");
         jim_string(jim, "object");
@@ -520,7 +520,7 @@ void nob_mcp_add_array_param_impl(
             nob_mcp__type_and_constraints(jim, tool_param_desc);
         } jim_object_end(jim);
     } jim_object_end(jim);
-    if (da_last(&request_handler->tools_list_scopes) == NOB_MCP_SCOPE_ARRAY) {
+    if (nob_da_last(&request_handler->tools_list_scopes) == NOB_MCP_SCOPE_ARRAY) {
         jim_object_end(jim);
     }
 }
@@ -544,7 +544,7 @@ void nob_mcp_begin_array_impl(Nob_MCP_Request_Handler *request_handler, Nob_MCP_
     jim_member_key(jim, "items");
     jim_object_begin(jim);
 
-    da_append(&request_handler->tools_list_scopes, NOB_MCP_SCOPE_ARRAY);
+    nob_da_append(&request_handler->tools_list_scopes, NOB_MCP_SCOPE_ARRAY);
 }
 
 void nob_mcp_end_array_impl(Nob_MCP_Request_Handler *request_handler, const char *file, size_t line_no) {
@@ -552,8 +552,8 @@ void nob_mcp_end_array_impl(Nob_MCP_Request_Handler *request_handler, const char
         *request_handler,
         NOB_MCP_SCOPE_ARRAY | NOB_MCP_SCOPE_SET_ARRAY_TYPE,
         file, line_no);
-    if (da_last(&request_handler->tools_list_scopes) == NOB_MCP_SCOPE_SET_ARRAY_TYPE) {
-        UNUSED(da_pop(&request_handler->tools_list_scopes));
+    if (nob_da_last(&request_handler->tools_list_scopes) == NOB_MCP_SCOPE_SET_ARRAY_TYPE) {
+        NOB_UNUSED(nob_da_pop(&request_handler->tools_list_scopes));
         nob_mcp__assert_tool_list_scope(
             *request_handler,
             NOB_MCP_SCOPE_ARRAY,
@@ -561,7 +561,7 @@ void nob_mcp_end_array_impl(Nob_MCP_Request_Handler *request_handler, const char
     }
     Jim *jim = request_handler->out;
     jim_object_end(jim);
-    UNUSED(da_pop(&request_handler->tools_list_scopes));
+    NOB_UNUSED(nob_da_pop(&request_handler->tools_list_scopes));
 }
 
 void nob_mcp_begin_array_param_impl(Nob_MCP_Request_Handler *request_handler, Nob_MCP_Tool_Param_Name_And_Desc tool_param_desc, const char *file, size_t line_no) {
@@ -570,7 +570,7 @@ void nob_mcp_begin_array_param_impl(Nob_MCP_Request_Handler *request_handler, No
         NOB_MCP_SCOPE_TOOL | NOB_MCP_SCOPE_ARRAY | NOB_MCP_SCOPE_OBJECT,
         file, line_no);
     Jim *jim = request_handler->out;
-    if (da_last(&request_handler->tools_list_scopes) == NOB_MCP_SCOPE_ARRAY) {
+    if (nob_da_last(&request_handler->tools_list_scopes) == NOB_MCP_SCOPE_ARRAY) {
         // type
         jim_member_key(jim, "type");
         jim_string(jim, "object");
@@ -595,7 +595,7 @@ void nob_mcp_begin_array_param_impl(Nob_MCP_Request_Handler *request_handler, No
         jim_member_key(jim, "items");
         jim_object_begin(jim);
 
-    da_append(&request_handler->tools_list_scopes, NOB_MCP_SCOPE_ARRAY);
+    nob_da_append(&request_handler->tools_list_scopes, NOB_MCP_SCOPE_ARRAY);
 }
 
 void nob_mcp_end_array_param_impl(Nob_MCP_Request_Handler *request_handler, const char *file, size_t line_no) {
@@ -603,8 +603,8 @@ void nob_mcp_end_array_param_impl(Nob_MCP_Request_Handler *request_handler, cons
         *request_handler,
         NOB_MCP_SCOPE_ARRAY | NOB_MCP_SCOPE_SET_ARRAY_TYPE,
         file, line_no);
-    if (da_last(&request_handler->tools_list_scopes) == NOB_MCP_SCOPE_SET_ARRAY_TYPE) {
-        UNUSED(da_pop(&request_handler->tools_list_scopes));
+    if (nob_da_last(&request_handler->tools_list_scopes) == NOB_MCP_SCOPE_SET_ARRAY_TYPE) {
+        NOB_UNUSED(nob_da_pop(&request_handler->tools_list_scopes));
         nob_mcp__assert_tool_list_scope(
             *request_handler,
             NOB_MCP_SCOPE_ARRAY,
@@ -613,8 +613,8 @@ void nob_mcp_end_array_param_impl(Nob_MCP_Request_Handler *request_handler, cons
     Jim *jim = request_handler->out;
         jim_object_end(jim);
     jim_object_end(jim);
-    UNUSED(da_pop(&request_handler->tools_list_scopes));
-    if (da_last(&request_handler->tools_list_scopes) == NOB_MCP_SCOPE_ARRAY) {
+    NOB_UNUSED(nob_da_pop(&request_handler->tools_list_scopes));
+    if (nob_da_last(&request_handler->tools_list_scopes) == NOB_MCP_SCOPE_ARRAY) {
         jim_object_end(jim);
     }
 }
@@ -634,7 +634,7 @@ void nob_mcp_set_array_type_impl(Nob_MCP_Request_Handler *request_handler, Nob_M
     // type and constraints
     nob_mcp__type_and_constraints(jim, tool_param_desc);
 
-    da_append(&request_handler->tools_list_scopes, NOB_MCP_SCOPE_SET_ARRAY_TYPE);
+    nob_da_append(&request_handler->tools_list_scopes, NOB_MCP_SCOPE_SET_ARRAY_TYPE);
 }
 
 void nob_mcp_begin_object_param_impl(Nob_MCP_Request_Handler *request_handler, Nob_MCP_Tool_Param_Name_And_Desc tool_param_desc, const char *file, size_t line_no) {
@@ -643,7 +643,7 @@ void nob_mcp_begin_object_param_impl(Nob_MCP_Request_Handler *request_handler, N
          NOB_MCP_SCOPE_TOOL | NOB_MCP_SCOPE_ARRAY | NOB_MCP_SCOPE_OBJECT,
          file, line_no);
     Jim *jim = request_handler->out;
-    if (da_last(&request_handler->tools_list_scopes) == NOB_MCP_SCOPE_ARRAY) {
+    if (nob_da_last(&request_handler->tools_list_scopes) == NOB_MCP_SCOPE_ARRAY) {
         // type
         jim_member_key(jim, "type");
         jim_string(jim, "object");
@@ -668,7 +668,7 @@ void nob_mcp_begin_object_param_impl(Nob_MCP_Request_Handler *request_handler, N
         jim_member_key(jim, "properties");
         jim_object_begin(jim);
 
-    da_append(&request_handler->tools_list_scopes, NOB_MCP_SCOPE_OBJECT);
+    nob_da_append(&request_handler->tools_list_scopes, NOB_MCP_SCOPE_OBJECT);
 }
 
 void nob_mcp_end_object_param_impl(Nob_MCP_Request_Handler *request_handler, const char *file, size_t line_no) {
@@ -676,8 +676,8 @@ void nob_mcp_end_object_param_impl(Nob_MCP_Request_Handler *request_handler, con
     Jim *jim = request_handler->out;
         jim_object_end(jim);
     jim_object_end(jim);
-    UNUSED(da_pop(&request_handler->tools_list_scopes));
-    if (da_last(&request_handler->tools_list_scopes) == NOB_MCP_SCOPE_ARRAY) {
+    NOB_UNUSED(nob_da_pop(&request_handler->tools_list_scopes));
+    if (nob_da_last(&request_handler->tools_list_scopes) == NOB_MCP_SCOPE_ARRAY) {
         jim_object_end(jim);
     }
 }

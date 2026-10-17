@@ -130,13 +130,13 @@ bool nob_jsonrpc_parse_request(
     }
     if (!jimp_object_end(jimp)) return false;
     if (!parser->is_method_parsed) {
-        nob_log(ERROR, "Expect `method` to be present in the json string");
+        nob_log(NOB_ERROR, "Expect `method` to be present in the json string");
         return false;
     }
     if (params_parser.parse_clb != NULL && params.data != NULL) {
         jimp_begin(jimp, label, params.data, params.count);
         if (!nob_jsonrpc__parse_params(params_parser, ctx, parser->method, jimp)) {
-            nob_log(ERROR, "%s:0: Unable to parse the params", label);
+            nob_log(NOB_ERROR, "%s:0: Unable to parse the params", label);
             return false;
         }
         parser->is_params_parsed = true;
@@ -247,9 +247,9 @@ bool nob_jsonrpc_handle_request(
         if (error_message == NULL) {
             jim_string(failure, error_prefix);
         } else {
-            size_t saved = temp_save();
-            jim_string(failure, temp_sprintf("%s: %s", error_prefix, error_message));
-            temp_rewind(saved);
+            size_t saved = nob_temp_save();
+            jim_string(failure, nob_temp_sprintf("%s: %s", error_prefix, error_message));
+            nob_temp_rewind(saved);
         }
 
         jim_object_end(failure); // error

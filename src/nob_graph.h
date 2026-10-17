@@ -255,7 +255,7 @@ bool nob_graph_topo_visit(
             if(clb != NULL && !clb(ctx, tagged_rel.rel)) goto cleanup;
         } break;
         default:
-            UNREACHABLE("Tag");
+            NOB_UNREACHABLE("Tag");
         }
     }
 

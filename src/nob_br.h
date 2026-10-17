@@ -112,7 +112,7 @@ bool nob_br_fill(Nob_Buffered_Reader *reader) {
     result = true;
 defer:
     if (!result && errno != 0) {
-        nob_log(ERROR, "Error Occurred while filling the buffer from fdin(%d): %s", reader->fdin, strerror(errno));
+        nob_log(NOB_ERROR, "Error Occurred while filling the buffer from fdin(%d): %s", reader->fdin, strerror(errno));
     }
     return result;
 }

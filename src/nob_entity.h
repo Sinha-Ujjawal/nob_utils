@@ -16,15 +16,15 @@
 
 #define NOB_ENTITY_ID(x) x
 
-#define embed_entities(T)     \
-    struct {                  \
-        struct {              \
-            T value;          \
-            embed_ilist_node; \
-        } *items;             \
-        size_t count;         \
-        size_t capacity;      \
-        size_t kinds;         \
+#define nob_embed_entities(T)     \
+    struct {                      \
+        struct {                  \
+            T value;              \
+            nob_embed_ilist_node; \
+        } *items;                 \
+        size_t count;             \
+        size_t capacity;          \
+        size_t kinds;             \
     }
 
 #define nob_entity_reset(ent, knds)                                           \
@@ -138,6 +138,7 @@
 #ifndef NOB_ENTITY_STRIP_PREFIX_GUARD_
 #define NOB_ENTITY_STRIP_PREFIX_GUARD_
     #ifndef NOB_UNSTRIP_PREFIX
+        #define embed_entities  nob_embed_entities
         #define entity_reset    nob_entity_reset
         #define entity_create   nob_entity_create
         #define entity_get      nob_entity_get
