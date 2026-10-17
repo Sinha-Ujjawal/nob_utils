@@ -1,8 +1,6 @@
 #define NOB_IMPLEMENTATION
 #define NOB_BR_IMPLEMENTATION
-#include "nob.h"
-#include "nob_fixed_deque.h"
-#include "nob_channels.h"
+#include "nob_utils.h"
 
 #include <stdio.h>
 #include <unistd.h>
@@ -134,6 +132,7 @@ void test_blocking_recv(void) {
         if (!ok) break;
         assert(val == count++);
     }
+    NOB_UNUSED(count);
     assert(count == 4);
 
     pthread_join(producer, NULL);

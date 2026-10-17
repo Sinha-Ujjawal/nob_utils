@@ -12,8 +12,7 @@
 
 #define NOB_IMPLEMENTATION
 #define NOB_BR_IMPLEMENTATION
-#include "nob.h"
-#include "nob_br.h"
+#include "nob_utils.h"
 
 typedef struct {
     int fdin;

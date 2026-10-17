@@ -13,10 +13,11 @@
 
 #include <stdint.h>
 
-typedef uint32_t u32;
-typedef uint64_t u64;
-typedef double   f64;
-typedef bool     b32;
+typedef uint32_t           u32;
+typedef uint64_t           u64;
+typedef double             f64;
+typedef bool               b32;
+typedef unsigned long long ULL;
 
 u64 nob_read_os_timer(void);
 u64 nob_get_os_timer_freq(void);
@@ -289,7 +290,7 @@ void nob_reset_profiler(Nob_Profiler *profiler) {
     profiler->timer_freq = (f64) (NOB_PROFILER_BLOCK_TIMER_FREQ);
     profiler->start = NOB_PROFILER_BLOCK_TIMER();
 #else
-    UNUSED(profiler);
+    NOB_UNUSED(profiler);
 #endif // NOB_PROFILER_ENABLED
 }
 
@@ -318,10 +319,10 @@ void nob_start_profile_at_anchor(Nob_Profiler *profiler, const char *label, size
         block.old_total_page_faults_including_children = anchor->total_page_faults_including_children;
     nob_fa_append(&profiler->blocks, block);
 #else
-    UNUSED(profiler);
-    UNUSED(label);
-    UNUSED(anchor_idx);
-    UNUSED(opt);
+    NOB_UNUSED(profiler);
+    NOB_UNUSED(label);
+    NOB_UNUSED(anchor_idx);
+    NOB_UNUSED(opt);
 #endif // NOB_PROFILER_ENABLED && NOB_PROFILER_BLOCKS_ENABLED
 }
 
@@ -348,8 +349,8 @@ void nob_end_profile(Nob_Profiler *profiler, size_t byte_count) {
         }
     }
 #else
-    UNUSED(profiler);
-    UNUSED(byte_count);
+    NOB_UNUSED(profiler);
+    NOB_UNUSED(byte_count);
 #endif // NOB_PROFILER_ENABLED && NOB_PROFILER_BLOCKS_ENABLED
 }
 
@@ -389,7 +390,7 @@ void nob_log_profiler(Nob_Profiler profiler) {
         bool is_measuring = true;
         for (size_t i = 0; i < 2; i++) {
             size_t log_line_ptr = 0;
-            log_line_ptr += snprintf(is_measuring ? log_line : (log_line + log_line_ptr), is_measuring ? 0 : measured_size, " %s[%lu]: %.2f ms (%.2f%%", anchor.label, anchor.hit_count, millis, percent);
+            log_line_ptr += snprintf(is_measuring ? log_line : (log_line + log_line_ptr), is_measuring ? 0 : measured_size, " %s[%zu]: %.2f ms (%.2f%%", anchor.label, anchor.hit_count, millis, percent);
             if (anchor.total_elapsed_excluding_children != anchor.total_elapsed_including_children) {
                 f64 percent_with_children = 100 * (f64) anchor.total_elapsed_including_children / (f64) total_elapsed;
                 log_line_ptr += snprintf(is_measuring ? log_line : (log_line + log_line_ptr), is_measuring ? 0 : measured_size, ", %.2f%% w/children", percent_with_children);
@@ -405,12 +406,12 @@ void nob_log_profiler(Nob_Profiler profiler) {
                 log_line_ptr += snprintf(is_measuring ? log_line : (log_line + log_line_ptr), is_measuring ? 0 : measured_size, " %.3fmb at %.2fgb/s", mbs, gbps);
             }
             if(anchor.total_page_faults_including_children > 0) {
-                log_line_ptr += snprintf(is_measuring ? log_line : (log_line + log_line_ptr), is_measuring ? 0 : measured_size, " PF: %ld", anchor.total_page_faults_excluding_children);
+                log_line_ptr += snprintf(is_measuring ? log_line : (log_line + log_line_ptr), is_measuring ? 0 : measured_size, " PF: %llu", (ULL) anchor.total_page_faults_excluding_children);
                 if (anchor.byte_count > 0) {
                     log_line_ptr += snprintf(is_measuring ? log_line : (log_line + log_line_ptr), is_measuring ? 0 : measured_size, " (%0.4fk/fault)", (f64) anchor.byte_count / (anchor.total_page_faults_excluding_children * 1024.0));
                 }
                 if (anchor.total_page_faults_excluding_children != anchor.total_page_faults_including_children) {
-                    log_line_ptr += snprintf(is_measuring ? log_line : (log_line + log_line_ptr), is_measuring ? 0 : measured_size, " PF: %ld", anchor.total_page_faults_including_children);
+                    log_line_ptr += snprintf(is_measuring ? log_line : (log_line + log_line_ptr), is_measuring ? 0 : measured_size, " PF: %llu", (ULL) anchor.total_page_faults_including_children);
                     if (anchor.byte_count > 0) {
                         log_line_ptr += snprintf(is_measuring ? log_line : (log_line + log_line_ptr), is_measuring ? 0 : measured_size, " (%0.4fk/fault)", (f64) anchor.byte_count / (anchor.total_page_faults_including_children * 1024.0));
                     }
@@ -431,7 +432,7 @@ void nob_log_profiler(Nob_Profiler profiler) {
 #else
 #endif // NOB_PROFILER_BLOCKS_ENABLED
 #else
-    UNUSED(profiler);
+    NOB_UNUSED(profiler);
 #endif // NOB_PROFILER_ENABLED
 }
 
@@ -444,10 +445,10 @@ void nob_repeatition_tester_new_test_wave(Nob_Repeatition_Tester *tester, u64 ta
     } else if (tester->mode == NOB_REPEATITION_MODE_COMPLETED) {
         tester->mode = NOB_REPEATITION_MODE_TESTING;
         if (tester->target_processed_byte_count != target_processed_byte_count) {
-            nob_repeatition_tester_error(tester, "target_processed_byte_count changed. Previously %lu bytes, Attempted to change to %lu bytes", tester->target_processed_byte_count, target_processed_byte_count);
+            nob_repeatition_tester_error(tester, "target_processed_byte_count changed. Previously %llu bytes, Attempted to change to %llu bytes", (ULL) tester->target_processed_byte_count, (ULL) target_processed_byte_count);
         }
         if (tester->cpu_timer_freq != cpu_timer_freq) {
-            nob_repeatition_tester_error(tester, "cpu_timer_freq changed. Previously %lu, Attempted to change to %lu", tester->cpu_timer_freq, cpu_timer_freq);
+            nob_repeatition_tester_error(tester, "cpu_timer_freq changed. Previously %llu, Attempted to change to %llu", (ULL) tester->cpu_timer_freq, (ULL) cpu_timer_freq);
         }
     }
     tester->try_for_time = seconds_to_try * cpu_timer_freq;
@@ -512,7 +513,7 @@ void nob__print_value(char const *label, Nob_Repeatition_Value value, u64 cpu_ti
         }
     }
     NOB_ASSERT(log_line != NULL);
-    nob_log(INFO, "%s", log_line);
+    nob_log(NOB_INFO, "%s", log_line);
     nob_temp_rewind(mark);
 }
 
@@ -531,7 +532,7 @@ bool nob_repeatition_tester_is_testing(Nob_Repeatition_Tester *tester) {
                 nob_repeatition_tester_error(tester, "Unbalanced begin/end time, open count: %u, end count: %u", tester->open_block_count, tester->closed_block_count);
             }
             if (accum.E[NOB_REPEATITION_VALUE_MEM_BYTE_COUNT] != tester->target_processed_byte_count) {
-                nob_repeatition_tester_error(tester, "Processed byte count mismatch. Expected: %lu bytes, got %lu bytes", tester->target_processed_byte_count, accum.E[NOB_REPEATITION_VALUE_MEM_BYTE_COUNT]);
+                nob_repeatition_tester_error(tester, "Processed byte count mismatch. Expected: %llu bytes, got %llu bytes", (ULL) tester->target_processed_byte_count, (ULL) accum.E[NOB_REPEATITION_VALUE_MEM_BYTE_COUNT]);
             }
             if (tester->mode == NOB_REPEATITION_MODE_TESTING) {
                 Nob_Repeatition_Test_Result *result = &tester->result;

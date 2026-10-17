@@ -131,7 +131,7 @@ bool build() {
                     "-I./thirdparty", "-I./src",
                     "-O1",\
                     "-Wall", "-Wextra", "-Werror", "-Wswitch-enum",
-                    "-Wno-unused-variable", "-Wno-unused-but-set-variable", "-Wno-format", "-Wno-unused-function", // TODO: fix these warning errors
+                    "-Wno-nonnull", // TODO: fix this warning
                     "-ggdb",
                     "-o", output_path,
                     test_case->source_files[0]

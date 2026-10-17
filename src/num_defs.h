@@ -1,11 +1,19 @@
 #ifndef NUM_DEFS_H_
 #define NUM_DEFS_H_
 
+#include <inttypes.h>
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
 #include <stdatomic.h>
 #include <float.h>
+
+#define PRIs8  PRId8
+#define PRIs16 PRId16
+#define PRIs32 PRId32
+#define PRIs64 PRId64
+#define PRIf32 "f"
+#define PRIf64 "lf"
 
 // Unsigned Integers
 typedef uint8_t  u8;

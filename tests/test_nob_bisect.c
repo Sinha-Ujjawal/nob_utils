@@ -32,13 +32,13 @@ int main(void) {
     do {                                                                                                           \
         size_t search_item = x;                                                                                    \
         int search_item_idx = bisect_algo(&arr, ARRAY_LEN(arr), sizeof(*arr), &search_item, is_lte_for_int, NULL); \
-        printf(#bisect_algo"(%d): %d\n", search_item, search_item_idx);                                            \
+        printf(#bisect_algo"(%zu): %d\n", search_item, search_item_idx);                                           \
     } while(0)
 #define find_nearest_value(x, bisect_algo)                                                                               \
     do {                                                                                                                 \
         size_t search_item = x;                                                                                          \
         int *search_value = (int *) bisect_algo(&arr, ARRAY_LEN(arr), sizeof(*arr), &search_item, is_lte_for_int, NULL); \
-        printf(#bisect_algo"(%d): ", search_item);                                                                       \
+        printf(#bisect_algo"(%zu): ", search_item);                                                                      \
         if (search_value == NULL) {                                                                                      \
             printf("NOTFOUND\n");                                                                                        \
         } else {                                                                                                         \

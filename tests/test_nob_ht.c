@@ -2,8 +2,6 @@
 #include <string.h>
 
 #define NOB_IMPLEMENTATION
-#include "nob.h"
-
 #define NOB_HASH_IMPLEMENTATION
 #define NOB_HT_INIT_CAP 8
 #include "nob_utils.h"

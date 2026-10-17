@@ -1,7 +1,5 @@
-#include <stdio.h>
-
 #define NOB_IMPLEMENTATION
-#include "nob.h"
+#include "nob_utils.h"
 #include "nob_fa.h"
 
 typedef struct {
@@ -35,6 +33,7 @@ int main(void) {
     // 4. Test fa_pop
     nob_log(NOB_INFO, "Testing fa_pop...");
     int popped = fa_pop(&stack);
+    NOB_UNUSED(popped);
     NOB_ASSERT(popped == 60);
     NOB_ASSERT(stack.count == 5);
     NOB_ASSERT(fa_last(&stack) == 50);
@@ -55,6 +54,8 @@ int main(void) {
     fa_foreach(int, it, &stack) {
         sum += *it;
     }
+    NOB_UNUSED(sum);
+    NOB_UNUSED(expected_sum);
     NOB_ASSERT(sum == expected_sum);
 
     printf("\n✅ All Fixed Array tests passed successfully!\n");

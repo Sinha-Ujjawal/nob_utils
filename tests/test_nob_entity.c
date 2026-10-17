@@ -1,8 +1,6 @@
 #define NOB_IMPLEMENTATION
 #define NOB_ILIST_IMPLEMENTATION
-#include "nob.h"
-#include "nob_ilist.h"
-#include "nob_entity.h"
+#include "nob_utils.h"
 
 #include <stdio.h>
 #include <string.h>

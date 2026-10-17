@@ -6,11 +6,9 @@
 #define JIMP_IMPLEMENTATION
 #define JIM_IMPLEMENTATION
 #define NOB_JSONRPC_IMPLEMENTATION
-#include "nob.h"
 #include "jimp.h"
 #include "jim.h"
 #include "nob_utils.h"
-#include "nob_jsonrpc.h"
 
 // --- YOUR ORIGINAL TYPES AND LOGIC ---
 

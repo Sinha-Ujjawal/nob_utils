@@ -2,8 +2,6 @@
 
 #define NOB_ASSERT(x) NULL
 #define NOB_IMPLEMENTATION
-#include "nob.h"
-#include "nob_fa.h"
 #define NOB_PROFILER_IMPLEMENTATION
 #define NOB_PROFILER_ENABLED 1
 #define NOB_PROFILER_BLOCKS_ENABLED 1
@@ -12,7 +10,7 @@
 // #define NOB_PROFILER_BLOCK_TIMER nob_read_os_timer
 // #define NOB_PROFILER_BLOCK_TIMER_FREQ nob_get_os_timer_freq()
 // #define NOB_PROFILER_NO_STDLIB
-#include "nob_profiler.h"
+#include "nob_utils.h"
 
 Profiler profiler = {0};
 
@@ -140,20 +138,20 @@ int main(void) {
     }
     u64 elapsed_os = read_os_timer() - start_os;
     u64 elapsed_cpu = read_cpu_timer() - start_cpu;
-    printf("OS Elapsed: %zu, Time Taken: %f millis\n", elapsed_os, measure_time_in_millis_from_elapsed(elapsed_os, os_freq));
-    printf("CPU Elapsed: %zu, Time Taken: %f millis\n", elapsed_cpu, measure_time_in_millis_from_elapsed(elapsed_cpu, cpu_freq));
+    printf("OS Elapsed: %llu, Time Taken: %f millis\n", (ULL) elapsed_os, measure_time_in_millis_from_elapsed(elapsed_os, os_freq));
+    printf("CPU Elapsed: %llu, Time Taken: %f millis\n", (ULL) elapsed_cpu, measure_time_in_millis_from_elapsed(elapsed_cpu, cpu_freq));
 
     {
         u64 n = 30;
         reset_profiler(&profiler);
         start_profile(&profiler, "fibonacci_recursive_start");
-        printf("fibonacci_recursive(%lu): %lu\n", n, fibonacci_recursive(n));
+        printf("fibonacci_recursive(%llu): %llu\n", (ULL) n, (ULL) fibonacci_recursive(n));
         end_profile(&profiler, 0);
         log_profiler(profiler);
 
         reset_profiler(&profiler);
         start_profile(&profiler, "fibonacci_iterative_start");
-        printf("fibonacci_iterative(%lu): %lu\n", n, fibonacci_iterative(n));
+        printf("fibonacci_iterative(%llu): %llu\n", (ULL) n, (ULL) fibonacci_iterative(n));
         end_profile(&profiler, 0);
         log_profiler(profiler);
     }
@@ -162,7 +160,7 @@ int main(void) {
        u64 n = 4, k = 1;
        reset_profiler(&profiler);
        start_profile(&profiler, "ackermann_recursive_start");
-       printf("ackermann_recursive(%lu, %lu): %lu\n", n, k, ackermann_recursive(n, k));
+       printf("ackermann_recursive(%llu, %llu): %llu\n", (ULL) n, (ULL) k, (ULL) ackermann_recursive(n, k));
        end_profile(&profiler, 0);
        log_profiler(profiler);
     }
@@ -171,7 +169,7 @@ int main(void) {
        u64 x = 24, y = 16, z = 8;
        reset_profiler(&profiler);
        start_profile(&profiler, "tak_start");
-       printf("tak(%lu, %lu, %lu): %lu\n", x, y, z, tak(x, y, z));
+       printf("tak(%llu, %llu, %llu): %llu\n", (ULL) x, (ULL) y, (ULL) z, (ULL) tak(x, y, z));
        end_profile(&profiler, 0);
        log_profiler(profiler);
     }

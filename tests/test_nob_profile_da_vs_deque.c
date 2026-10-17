@@ -4,7 +4,6 @@
 #define NOB_PROFILER_BLOCKS_ENABLED 1
 #define NOB_DA_INIT_CAP 256
 #define NOB_DEQUE_INIT_CAP 256
-#include "nob.h"
 #include "nob_utils.h"
 
 typedef struct {
@@ -25,7 +24,7 @@ int main(void) {
         u64 total_size = count * sizeof(u64);
 
         {
-            nob_log(INFO, "DA: Appending %zu KB", total_size / 1024);
+            nob_log(INFO, "DA: Appending %llu KB", (ULL) total_size / 1024ULL);
             memset(&tester, 0, sizeof(Repeatition_Tester));
             repeatition_test(
                 "Dynamic_Array",
@@ -46,7 +45,7 @@ int main(void) {
         }
 
         {
-            nob_log(INFO, "Deque: Appending %zu KB", total_size / 1024);
+            nob_log(INFO, "Deque: Appending %llu KB", (ULL) total_size / 1024ULL);
             memset(&tester, 0, sizeof(Repeatition_Tester));
             repeatition_test(
                 "Dynamic_Deque",
@@ -68,7 +67,7 @@ int main(void) {
 
         if (count <= 4096 * 1024) {
             {
-                nob_log(INFO, "DA: Prepending %zu KB", total_size / 1024);
+                nob_log(INFO, "DA: Prepending %llu KB", (ULL) total_size / 1024ULL);
                 memset(&tester, 0, sizeof(Repeatition_Tester));
                 repeatition_test(
                     "Dynamic_Array",
@@ -89,7 +88,7 @@ int main(void) {
             }
 
             {
-                nob_log(INFO, "Deque: Prepending %zu KB", total_size / 1024);
+                nob_log(INFO, "Deque: Prepending %llu KB", (ULL) total_size / 1024ULL);
                 memset(&tester, 0, sizeof(Repeatition_Tester));
                 repeatition_test(
                     "Dynamic_Deque",

@@ -3,7 +3,6 @@
 #include <stdbool.h>
 
 #define NOB_IMPLEMENTATION
-#include "nob.h"
 #include "nob_utils.h"
 
 // --- Heap Structures ---

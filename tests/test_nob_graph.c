@@ -118,7 +118,7 @@ int main() {
     da_foreach(Graph_Rel, rel, &rels) {
         uint32_t x, y;
         unpack_coords(rel->node, &x, &y);
-        printf("(%d, %d), depth: %ld\n", x, y, rel->depth);
+        printf("(%d, %d), depth: %zu\n", x, y, rel->depth);
     }
     free(rels.items);
     return 0;

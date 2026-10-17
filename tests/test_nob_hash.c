@@ -3,8 +3,6 @@
 #include <time.h>
 
 #define NOB_IMPLEMENTATION
-#include "nob.h"
-
 #define NOB_HASH_IMPLEMENTATION
 #include "nob_utils.h"
 

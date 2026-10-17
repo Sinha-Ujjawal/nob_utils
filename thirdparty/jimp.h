@@ -279,7 +279,7 @@ void jimp_diagf(Jimp *jimp, const char *fmt, ...)
         }
     }
 
-    fprintf(stderr, "%s:%ld:%ld: ", jimp->file_path, line_number + 1, point - line_start + 1);
+    fprintf(stderr, "%s:%ld:%td: ", jimp->file_path, line_number + 1, point - line_start + 1);
     va_list args;
     va_start(args, fmt);
     vfprintf(stderr, fmt, args);

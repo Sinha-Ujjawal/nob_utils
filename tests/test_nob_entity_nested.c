@@ -1,8 +1,6 @@
 #define NOB_IMPLEMENTATION
-#include "nob.h"
 #define NOB_ILIST_IMPLEMENTATION
-#include "nob_ilist.h"
-#include "nob_entity.h"
+#include "nob_utils.h"
 
 typedef struct {
     float x;
@@ -48,7 +46,7 @@ typedef struct {
     embed_entities(Entity);
 } Entities;
 
-static inline void log_entity(Entity entity, size_t space) {
+static inline void log_entity(Entity entity, int space) {
     nob_log(INFO, "%*.sIdx: %zu", space, " ", entity.idx.value);
     nob_log(INFO, "%*.sName: %s", space, " ", entity.name);
     nob_log(INFO, "%*.sPosn: (%f, %f)", space, " ", entity.posn.x, entity.posn.y);
@@ -65,31 +63,40 @@ static inline EntityIndex add_entity(Entities *entities, Entity entity) {
 }
 
 static inline Entity* get_entity(Entities entities, EntityIndex idx) {
-    if (idx.value < entities.count) {
-        return &entities.items[idx.value].value;
+    Entity *ret = NULL;
+    entity_get(&entities, idx.value, ret);
+    if (ret != NULL) {
+        assert(ret->idx.value == idx.value);
+        return ret;
     }
-    return NULL;
+    memset(&entities.items[0].value, 0, sizeof(Entity));
+    return &entities.items[0].value;
 }
 
-static inline bool delete_entity(Entities *entities, EntityIndex idx) {
-    Entity *entity = get_entity(*entities, idx);
-    if (entity != NULL) {
-        memset(entity, 0, sizeof(Entity));
-        entity_delete(entities, idx.value);
-        return true;
-    }
-    return false;
-}
+// NOTE: below function is an example of deleting entity
+// static inline bool delete_entity(Entities *entities, EntityIndex idx) {
+//     Entity *entity = get_entity(*entities, idx);
+//     if (entity != NULL && entity->idx.value != 0) {
+// #define accessor(x) (x).value
+//         ilist_delink(entities->items, accessor, idx.value);
+// #undef accessor
+//         memset(entity, 0, sizeof(Entity));
+//         entity_delete(entities, idx.value);
+//         return true;
+//     }
+//     return false;
+// }
 
-static inline bool convert_kind(Entities *entities, EntityIndex idx, EntityKind newKind) {
-    Entity *entity = get_entity(*entities, idx);
-    if (entity != NULL) {
-        entity_move(entities, idx.value, newKind);
-        entity->kind = newKind;
-        return true;
-    }
-    return false;
-}
+// NOTE: below function is an example of converting entity's kind
+// static inline bool convert_kind(Entities *entities, EntityIndex idx, EntityKind newKind) {
+//     Entity *entity = get_entity(*entities, idx);
+//     if (entity != NULL && entity->idx.value != 0) {
+//         entity_move(entities, idx.value, newKind);
+//         entity->kind = newKind;
+//         return true;
+//     }
+//     return false;
+// }
 
 static inline bool link_sword_to_player(Entities *entities, EntityIndex playerIdx, EntityIndex swordIdx) {
     Entity *player = get_entity(*entities, playerIdx);
@@ -149,7 +156,7 @@ int main(void) {
 
     link_sword_to_player(&entities, player1Idx, masterSwordIdx);
     link_sword_to_player(&entities, player2Idx, excaliberSwordIdx);
-    // link_sword_to_player(&entities, player2Idx, busterSwordIdx);
+    link_sword_to_player(&entities, player2Idx, busterSwordIdx);
 
     nob_log(INFO, "All Entities:");
     for (EntityKind kind = 0; kind < __count_EntityKind; kind++) {
@@ -166,18 +173,34 @@ int main(void) {
         nob_log(INFO, "  Swords:");
 #define accessor(x) (x).value
         ilist_foreach(Entity, it2, &entities.items, accessor, it->idx.value) {
-            nob_log(INFO, "  Kind: %s", entity_kind_as_str(it2->kind));
-            log_entity(*it2, 4);
+            nob_log(INFO, "    Kind: %s", entity_kind_as_str(it2->kind));
+            log_entity(*it2, 6);
         }
 #undef accessor
     }
 
-    nob_log(INFO, "Delinking swords from their players:");
+    nob_log(INFO, "Delinking sword: %s from player: %s", get_entity(entities, excaliberSwordIdx)->name, get_entity(entities, player2Idx)->name);
+    delink_sword_from_player(&entities, excaliberSwordIdx);
+
+    nob_log(INFO, "Swords of each player now:");
+    entity_foreach(Entity, it, &entities, EntityKindPlayer) {
+        nob_log(INFO, "Kind: %s", entity_kind_as_str(it->kind));
+        log_entity(*it, 2);
+        nob_log(INFO, "  Swords:");
+#define accessor(x) (x).value
+        ilist_foreach(Entity, it2, &entities.items, accessor, it->idx.value) {
+            nob_log(INFO, "    Kind: %s", entity_kind_as_str(it2->kind));
+            log_entity(*it2, 6);
+        }
+#undef accessor
+    }
+
+    nob_log(INFO, "Delinking all swords from their players:");
     entity_foreach(Entity, it, &entities, EntityKindSword) {
         EntityIndex playerIdx = delink_sword_from_player(&entities, it->idx);
         if (playerIdx.value != 0) {
             Entity *player = get_entity(entities, playerIdx);
-            nob_log(INFO, "Sword(Idx: %zu, Name: %s) delinked from Player(Idx: %zu, Name: %s)", it->idx, it->name, player->idx, player->name);
+            nob_log(INFO, "Sword(Idx: %zu, Name: %s) delinked from Player(Idx: %zu, Name: %s)", it->idx.value, it->name, player->idx.value, player->name);
         }
     }
 
@@ -188,8 +211,8 @@ int main(void) {
         nob_log(INFO, "  Swords:");
 #define accessor(x) (x).value
         ilist_foreach(Entity, it2, &entities.items, accessor, it->idx.value) {
-            nob_log(INFO, "  Kind: %s", entity_kind_as_str(it2->kind));
-            log_entity(*it2, 4);
+            nob_log(INFO, "    Kind: %s", entity_kind_as_str(it2->kind));
+            log_entity(*it2, 6);
         }
 #undef accessor
     }

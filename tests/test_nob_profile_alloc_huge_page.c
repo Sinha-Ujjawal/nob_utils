@@ -3,7 +3,6 @@
 #define NOB_PROFILER_ENABLED 1
 #define NOB_PROFILER_BLOCKS_ENABLED 1
 #define NOB_HUGE_PAGE_ALLOC_IMPLEMENTATION
-#include "nob.h"
 #include "nob_utils.h"
 
 int main(void) {
@@ -15,7 +14,7 @@ int main(void) {
             u64 mark = temp_save();
             memset(&tester, 0, sizeof(Repeatition_Tester));
             repeatition_test(
-                temp_sprintf("Using_Malloc_%zu_KB", size / 1024),
+                temp_sprintf("Using_Malloc_%llu_KB", (ULL) size / 1024ULL),
                 tester, cpu_timer_freq, seconds_to_try, size,
                 (
                     u8 *arr = malloc(size);
@@ -37,7 +36,7 @@ int main(void) {
             memset(&tester, 0, sizeof(Repeatition_Tester));
             bool log_huge_page_status_once = true;
             repeatition_test(
-                temp_sprintf("Using_Huge_Page_Allocator_%zu_KB", size / 1024),
+                temp_sprintf("Using_Huge_Page_Allocator_%llu_KB", (ULL) size / 1024ULL),
                 tester, cpu_timer_freq, seconds_to_try, size,
                 (
                     u8 *arr = NULL;

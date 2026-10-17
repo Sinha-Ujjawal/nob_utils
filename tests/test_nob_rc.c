@@ -2,7 +2,6 @@
 #include <stdio.h>
 
 #define NOB_IMPLEMENTATION
-#include "nob.h"
 // #define NOB_RC_LOG
 #define NOB_RC_TRACK_STATS
 #define NOB_RC_IMPLEMENTATION

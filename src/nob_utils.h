@@ -3,7 +3,10 @@
 
 // Thirdparty
 #ifndef NOB_H_
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-variable"
 #include "nob.h"
+#pragma GCC diagnostic pop
 #endif // NOB_H_
 
 #ifndef JIM_H_
