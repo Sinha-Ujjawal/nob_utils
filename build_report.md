@@ -14,7 +14,7 @@
 |test_nob_rc|✅ Success|✅ Success|✅ Success|✅ Success|✅ Success|✅ Success|
 |test_nob_br|✅ Success|✅ Success|✅ Success|✅ Success|✅ Success|✅ Success|
 |test_nob_jsonrpc|✅ Success|✅ Success|✅ Success|✅ Success|✅ Success|✅ Success|
-|test_nob_mcp|✅ Success|✅ Success|🚫 Not-Supported|✅ Success|✅ Success|🚫 Not-Supported|
+|test_nob_mcp|✅ Success|✅ Success|✅ Success|✅ Success|✅ Success|✅ Success|
 |test_nob_channels|✅ Success|✅ Success|✅ Success|✅ Success|✅ Success|✅ Success|
 |test_nob_profiler|✅ Success|✅ Success|✅ Success|✅ Success|✅ Success|✅ Success|
 |test_nob_profile_da_vs_deque|✅ Success|✅ Success|✅ Success|✅ Success|✅ Success|✅ Success|
@@ -630,6 +630,13 @@ Status: ✅ Success
 ```
 ```
 Test Case: test_nob_mcp
+Target: x86_64-windows-gnu
+Errors:
+
+Status: ✅ Success
+```
+```
+Test Case: test_nob_mcp
 Target: aarch64-linux-gnu
 Errors:
 
@@ -638,6 +645,13 @@ Status: ✅ Success
 ```
 Test Case: test_nob_mcp
 Target: aarch64-macos-none
+Errors:
+
+Status: ✅ Success
+```
+```
+Test Case: test_nob_mcp
+Target: aarch64-windows-gnu
 Errors:
 
 Status: ✅ Success

@@ -8,13 +8,8 @@
 #define JIM_IMPLEMENTATION
 #define JIMP_IMPLEMENTATION
 #define NOB_JSONRPC_IMPLEMENTATION
-#include "nob.h"
-#include "jim.h"
-#include "jimp.h"
-#include "nob_jsonrpc.h"
-
 #define NOB_MCP_IMPLEMENTATION
-#include "nob_mcp.h"
+#include "nob_utils.h"
 
 // --- Callbacks ---
 bool tools_list_clb(MCP_Request_Handler *request_handler) {
