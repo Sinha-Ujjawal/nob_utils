@@ -52,8 +52,8 @@ size_t nob_shuffler_next_index(Nob_Shuffler *shuffler) {
     size_t ret;
     do {
         if (shuffler->x == 0) {
-            shuffler->a = nob_rand_inclusive(1, shuffler->p - 1);
-            shuffler->b = nob_rand_inclusive(1, shuffler->p - 1);
+            shuffler->a = nob_rand_inclusivei(1, shuffler->p - 1);
+            shuffler->b = nob_rand_inclusivei(1, shuffler->p - 1);
         }
         ret = (shuffler->a * shuffler->x + shuffler->b) % shuffler->p; // (ax + b) % p
         shuffler->x = (shuffler->x + 1) % (shuffler->p);

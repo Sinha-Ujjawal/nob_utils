@@ -1,14 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "nob.h"
-#include "nob_ext.h"
+#define NOB_IMPLEMENTATION
+#define NOB_EXT_IMPLEMENTATION
 #define NOB_BISECT_IMPLEMENTATION
-#include "nob_bisect.h"
 #define NOB_PRIME_IMPLEMENTATION
-#include "nob_prime.h"
 #define NOB_SHUFFLE_IMPLEMENTATION
-#include "nob_shuffle.h"
+#include "nob_utils.h"
 
 int main(void) {
     srand(time(NULL));
